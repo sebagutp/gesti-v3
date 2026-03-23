@@ -1,26 +1,25 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import type { PlanType } from '@/lib/types/common'
-
-export type Feature =
-  | 'contratos_ilimitados'
-  | 'liquidaciones_ilimitadas'
-  | 'pdf_descarga'
-  | 'whatsapp_bot'
-  | 'multi_contrato'
+import type { PlanType, Feature } from '@/lib/types/common'
 
 const PLAN_FEATURES: Record<PlanType, Feature[]> = {
-  Free: [],
+  Free: ['simular_contrato', 'simular_liquidacion'],
   Pro_Mensual: [
-    'contratos_ilimitados',
-    'liquidaciones_ilimitadas',
-    'pdf_descarga',
+    'simular_contrato',
+    'simular_liquidacion',
+    'contrato_valido',
+    'liquidaciones',
+    'pdf_generacion',
     'multi_contrato',
+    'soporte',
   ],
   Pro_Anual: [
-    'contratos_ilimitados',
-    'liquidaciones_ilimitadas',
-    'pdf_descarga',
+    'simular_contrato',
+    'simular_liquidacion',
+    'contrato_valido',
+    'liquidaciones',
+    'pdf_generacion',
     'multi_contrato',
+    'soporte',
     'whatsapp_bot',
   ],
 }
@@ -39,6 +38,10 @@ export async function checkPlanAccess(
 
   if (error || !billing) {
     // No billing record = Free plan
+    const freeFeatures = PLAN_FEATURES.Free
+    if (freeFeatures.includes(feature)) {
+      return { allowed: true }
+    }
     return {
       allowed: false,
       reason: 'Necesitas un plan Pro para acceder a esta función.',
@@ -57,6 +60,12 @@ export async function checkPlanAccess(
 
   // Check plan hasn't expired
   if (billing.end_date && new Date(billing.end_date) < new Date()) {
+    // Auto-mark as expired
+    await supabase
+      .from('user_billing')
+      .update({ plan_status: 'expired', updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+
     return {
       allowed: false,
       reason: 'Tu plan ha expirado. Renueva para continuar.',
@@ -64,7 +73,7 @@ export async function checkPlanAccess(
   }
 
   // Check feature access
-  const features = PLAN_FEATURES[planType] || []
+  const features = PLAN_FEATURES[planType] || PLAN_FEATURES.Free
   if (!features.includes(feature)) {
     return {
       allowed: false,
