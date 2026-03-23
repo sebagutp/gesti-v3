@@ -8,6 +8,7 @@ import {
   calcularLiquidacion,
   calcularIUSC,
   resolverBrutoDesdeNeto,
+  obtenerTasasReforma,
   INDICADORES_MARZO_2026,
 } from '../liquidacion'
 import type { InputLiquidacion } from '../../types/liquidacion'
@@ -323,5 +324,82 @@ describe('resolverBrutoDesdeNeto — bisección', () => {
   it('$1.5M → bruto $1.817.301', () => {
     const bruto = resolverBrutoDesdeNeto(1_500_000, tasaUno, IND.tope_afp)
     expect(bruto).toBe(1_817_301)
+  })
+})
+
+// ============================================================
+// Reforma Previsional — Gradualidad por fecha (Ley 21.735)
+// ============================================================
+describe('obtenerTasasReforma — gradualidad por periodo', () => {
+  it('2026-03: cap_individual 0,1%, expectativa 0,9%, rentabilidad 0%', () => {
+    const tasas = obtenerTasasReforma('2026-03')
+    expect(tasas.cap_individual_afp).toBe(0.001)
+    expect(tasas.expectativa_vida).toBe(0.009)
+    expect(tasas.rentabilidad_protegida).toBe(0)
+    expect(tasas.ley_sanna).toBe(0.003)
+  })
+
+  it('2026-08: expectativa sube a 1,0%, rentabilidad activa 0,9%', () => {
+    const tasas = obtenerTasasReforma('2026-08')
+    expect(tasas.cap_individual_afp).toBe(0.001)
+    expect(tasas.expectativa_vida).toBe(0.010)
+    expect(tasas.rentabilidad_protegida).toBe(0.009)
+  })
+
+  it('2027-01: cap_individual sube a 0,3%', () => {
+    const tasas = obtenerTasasReforma('2027-01')
+    expect(tasas.cap_individual_afp).toBe(0.003)
+    expect(tasas.expectativa_vida).toBe(0.010)
+    expect(tasas.rentabilidad_protegida).toBe(0.009)
+  })
+
+  it('2029-06: cap_individual sube a 0,5%', () => {
+    const tasas = obtenerTasasReforma('2029-06')
+    expect(tasas.cap_individual_afp).toBe(0.005)
+  })
+
+  it('2033-01: cap_individual sube a 4,5%', () => {
+    const tasas = obtenerTasasReforma('2033-01')
+    expect(tasas.cap_individual_afp).toBe(0.045)
+  })
+
+  it('pre-2026: todo en 0 excepto SANNA', () => {
+    const tasas = obtenerTasasReforma('2025-12')
+    expect(tasas.cap_individual_afp).toBe(0)
+    expect(tasas.expectativa_vida).toBe(0)
+    expect(tasas.rentabilidad_protegida).toBe(0)
+    expect(tasas.ley_sanna).toBe(0.003)
+  })
+})
+
+// ============================================================
+// Reforma en motor: pensionado exento, no-pensionado aplica
+// ============================================================
+describe('Reforma en motor — cotizaciones empleador', () => {
+  it('ley_sanna siempre presente (incluye pensionados)', () => {
+    const input: InputLiquidacion = {
+      ...inputBase(600_000, 'bruto'),
+      es_pensionado: true,
+    }
+    const resultado = calcularLiquidacion(input)
+    expect(resultado.cotizaciones_empleador.ley_sanna).toBeGreaterThan(0)
+  })
+
+  it('no-pensionado: 4 cotizaciones reforma > 0 (marzo 2026)', () => {
+    const resultado = calcularLiquidacion(inputBase(600_000, 'bruto'))
+    expect(resultado.cotizaciones_empleador.afp_empleador).toBeGreaterThan(0)
+    expect(resultado.cotizaciones_empleador.expectativa_vida).toBeGreaterThan(0)
+    // rentabilidad_protegida = 0 en marzo 2026
+    expect(resultado.cotizaciones_empleador.rentabilidad_protegida).toBe(0)
+    expect(resultado.cotizaciones_empleador.ley_sanna).toBeGreaterThan(0)
+  })
+
+  it('post agosto 2026: rentabilidad_protegida > 0', () => {
+    const indAgosto = {
+      ...IND,
+      mes: '2026-08',
+    }
+    const resultado = calcularLiquidacion(inputBase(600_000, 'bruto'), indAgosto)
+    expect(resultado.cotizaciones_empleador.rentabilidad_protegida).toBeGreaterThan(0)
   })
 })
