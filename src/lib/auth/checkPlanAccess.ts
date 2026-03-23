@@ -9,7 +9,6 @@ const PLAN_FEATURES: Record<PlanType, Feature[]> = {
     'contrato_valido',
     'liquidaciones',
     'pdf_generacion',
-    'multi_contrato',
     'soporte',
   ],
   Pro_Anual: [
@@ -18,9 +17,7 @@ const PLAN_FEATURES: Record<PlanType, Feature[]> = {
     'contrato_valido',
     'liquidaciones',
     'pdf_generacion',
-    'multi_contrato',
     'soporte',
-    'whatsapp_bot',
   ],
 }
 
