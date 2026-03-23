@@ -1,5 +1,5 @@
 // ============================================================
-// WhatsApp Message Handler — Gesti V3.1 (Rama D) — HU-330/331/332
+// WhatsApp Message Handler — Gesti V3.1 (Rama D) — HU-330/331/332/333
 // Parsea mensajes entrantes y despacha al flujo correspondiente
 // ============================================================
 
@@ -7,6 +7,12 @@ import type { WAWebhookPayload, ParsedMessage } from './types'
 import { sendTextMessage, sendButtonMessage } from './client'
 import { sendStepPrompt, processStepResponse } from './simulation-flow'
 import { generateLegalResponse } from './ai-chatbot'
+import {
+  getConversation,
+  upsertConversation,
+  deleteConversation,
+  type ConversationState,
+} from './conversation-store'
 
 /** Parsear payload de Meta Cloud API y extraer mensajes */
 export function parseIncomingMessages(payload: WAWebhookPayload): ParsedMessage[] {
@@ -52,26 +58,6 @@ export function parseIncomingMessages(payload: WAWebhookPayload): ParsedMessage[
   return messages
 }
 
-// In-memory conversation state (replaced by Supabase in HU-333)
-const conversations = new Map<string, {
-  mode: 'menu' | 'simulacion' | 'consulta'
-  currentStep: number
-  data: Record<string, unknown>
-  chatHistory: Array<{ role: 'user' | 'assistant'; content: string }>
-  updatedAt: number
-}>()
-
-const TIMEOUT_MS = 30 * 60 * 1000 // 30 minutos
-
-function getConversation(phone: string) {
-  const conv = conversations.get(phone)
-  if (conv && Date.now() - conv.updatedAt > TIMEOUT_MS) {
-    conversations.delete(phone)
-    return null
-  }
-  return conv ?? null
-}
-
 /** Manejar un mensaje individual (punto de entrada principal) */
 export async function handleMessage(parsed: ParsedMessage): Promise<void> {
   const { from, text, interactiveId } = parsed
@@ -85,23 +71,25 @@ export async function handleMessage(parsed: ParsedMessage): Promise<void> {
 
   // Check for reset commands
   if (['hola', 'menu', 'menú', 'inicio', 'reiniciar', 'salir'].includes(lower)) {
-    conversations.delete(from)
+    await deleteConversation(from)
     await sendMainMenu(from)
     return
   }
 
-  const conv = getConversation(from)
+  // Fetch persisted conversation state (returns null if expired or not found)
+  const conv = await getConversation(from)
 
-  // No active conversation — show menu
+  // No active conversation — show menu or handle menu selection
   if (!conv) {
-    // Check if this is a menu selection
     if (interactiveId === 'menu_simular' || lower === 'simular' || lower === '1') {
-      conversations.set(from, { mode: 'simulacion', currentStep: 0, data: {}, chatHistory: [], updatedAt: Date.now() })
+      const state: ConversationState = { mode: 'simulacion', currentStep: 0, data: {}, chatHistory: [] }
+      await upsertConversation(from, state)
       await sendStepPrompt(from, 0, {})
       return
     }
     if (interactiveId === 'menu_consulta' || lower === 'consulta' || lower === '2') {
-      conversations.set(from, { mode: 'consulta', currentStep: 0, data: {}, chatHistory: [], updatedAt: Date.now() })
+      const state: ConversationState = { mode: 'consulta', currentStep: 0, data: {}, chatHistory: [] }
+      await upsertConversation(from, state)
       await sendTextMessage(from, '🤖 *Modo consulta laboral*\n\nPregúntame sobre legislación laboral de Trabajadores de Casa Particular en Chile.\n\nEscribe *menu* para volver al menú.')
       return
     }
@@ -113,25 +101,29 @@ export async function handleMessage(parsed: ParsedMessage): Promise<void> {
   if (conv.mode === 'simulacion') {
     const result = await processStepResponse(from, conv.currentStep, text, interactiveId, conv.data)
     if (result.completed) {
-      conversations.delete(from)
+      await deleteConversation(from)
     } else {
-      conv.currentStep = result.nextStep
-      conv.data = result.data
-      conv.updatedAt = Date.now()
+      await upsertConversation(from, {
+        ...conv,
+        currentStep: result.nextStep,
+        data: result.data,
+      })
     }
     return
   }
 
   // Active consultation flow — Claude AI for TCP labor law
   if (conv.mode === 'consulta') {
-    conv.updatedAt = Date.now()
     const response = await generateLegalResponse(text, conv.chatHistory)
-    conv.chatHistory.push({ role: 'user', content: text })
-    conv.chatHistory.push({ role: 'assistant', content: response })
-    // Keep history bounded
-    if (conv.chatHistory.length > 20) {
-      conv.chatHistory = conv.chatHistory.slice(-20)
-    }
+    const updatedHistory = [
+      ...conv.chatHistory,
+      { role: 'user' as const, content: text },
+      { role: 'assistant' as const, content: response },
+    ]
+    await upsertConversation(from, {
+      ...conv,
+      chatHistory: updatedHistory,
+    })
     await sendTextMessage(from, response)
     return
   }
