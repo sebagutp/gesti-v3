@@ -50,6 +50,7 @@ export function Header({ onMenuToggle }: { onMenuToggle?: () => void }) {
         <button
           onClick={handleLogout}
           className="text-sm text-gesti-teal hover:text-gesti-teal/80 font-medium transition-colors"
+          aria-label="Cerrar sesión"
         >
           Cerrar sesión
         </button>

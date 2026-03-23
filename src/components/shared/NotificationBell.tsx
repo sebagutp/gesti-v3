@@ -132,7 +132,7 @@ export function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
+        <div role="dialog" aria-label="Notificaciones" className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gesti-dark">Notificaciones</h3>
             {unreadCount > 0 && (

@@ -34,7 +34,7 @@ export function SimuladorLiquidacion({ onCalculate, isLoading }: SimuladorLiquid
       {isLoading && (
         <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl">
           <div className="flex flex-col items-center gap-3">
-            <div className="h-8 w-8 border-3 border-gesti-verde border-t-transparent rounded-full animate-spin" />
+            <div className="h-8 w-8 border-[3px] border-gesti-verde border-t-transparent rounded-full animate-spin" aria-label="Cargando" role="status" />
             <p className="text-sm text-gray-500">Calculando liquidación...</p>
           </div>
         </div>

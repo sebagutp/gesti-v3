@@ -201,7 +201,7 @@ export function MultiStepForm({
             )}
 
             {/* Question */}
-            <label className="block text-lg font-medium text-gesti-dark mb-4">
+            <label htmlFor={`field-${currentStep.id}`} className="block text-lg font-medium text-gesti-dark mb-4">
               {currentStep.label}
             </label>
 
@@ -219,15 +219,18 @@ export function MultiStepForm({
             )}
 
             {/* Error */}
-            {error && (
-              <motion.p
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-sm text-red-500 mt-2"
-              >
-                {error}
-              </motion.p>
-            )}
+            <div aria-live="polite">
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-sm text-red-500 mt-2"
+                  role="alert"
+                >
+                  {error}
+                </motion.p>
+              )}
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>

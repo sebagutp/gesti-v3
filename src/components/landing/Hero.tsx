@@ -32,10 +32,11 @@ export function Hero() {
         <div className="flex-shrink-0">
           <Image
             src="https://gesti.cl/lovable-uploads/77774409-5ea8-40b2-8d6a-27b5285709d5.png"
-            alt="Gesti"
+            alt="Gesti - Plataforma de gestión laboral TCP"
             width={200}
             height={200}
             className="w-40 md:w-52 h-auto opacity-90"
+            priority
             unoptimized
           />
         </div>

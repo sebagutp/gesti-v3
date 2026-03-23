@@ -7,6 +7,7 @@ const poppins = Poppins({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700'],
   variable: '--font-poppins',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -39,6 +40,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={poppins.variable}>
       <body className="font-poppins bg-gesti-bg min-h-screen">
+        {/* Skip to main content */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-gesti-teal focus:text-white focus:rounded-md focus:text-sm"
+        >
+          Saltar al contenido principal
+        </a>
+
         {/* Google Tag Manager (noscript) */}
         {gtmId && (
           <noscript>

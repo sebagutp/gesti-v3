@@ -79,6 +79,7 @@ export function ContractCard({ contrato, onEdit, onGeneratePDF, onDelete }: Cont
               size="icon"
               onClick={onDelete}
               className="ml-auto text-gray-400 hover:text-red-500"
+              aria-label="Eliminar contrato"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

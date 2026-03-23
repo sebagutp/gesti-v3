@@ -19,7 +19,11 @@ export function CollapsibleCard({ title, icon, defaultOpen = false, children }: 
     <Card>
       <CardHeader
         className="cursor-pointer select-none"
+        role="button"
+        tabIndex={0}
+        aria-expanded={isOpen}
         onClick={() => setIsOpen((prev) => !prev)}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsOpen((prev) => !prev) } }}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
