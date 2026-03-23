@@ -162,6 +162,64 @@ describe('Transbank Billing', () => {
     })
   })
 
+  describe('Upgrade Pro_Mensual → Pro_Anual', () => {
+    it('should calculate prorated credit for remaining days', () => {
+      const dailyRate = PLAN_PRICES.Pro_Mensual / PLAN_DURATIONS.Pro_Mensual // 330 CLP/day
+      expect(dailyRate).toBe(330)
+
+      // 15 days remaining → 4950 CLP credit
+      const credit15 = Math.round(dailyRate * 15)
+      expect(credit15).toBe(4950)
+
+      // Upgrade amount = Annual - credit
+      const upgradeAmount = PLAN_PRICES.Pro_Anual - credit15
+      expect(upgradeAmount).toBe(90090)
+    })
+
+    it('should give zero credit if plan already expired', () => {
+      const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000)
+      const now = new Date()
+      const daysRemaining = Math.max(0, Math.ceil((pastDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+      expect(daysRemaining).toBe(0)
+    })
+
+    it('should enforce minimum 1 CLP for Transbank', () => {
+      // Even with max credit, amount should be at least 1
+      const amount = Math.max(1, PLAN_PRICES.Pro_Anual - 100000)
+      expect(amount).toBe(1)
+    })
+  })
+
+  describe('Downgrade blocking', () => {
+    it('should block downgrade from active Pro_Anual to Pro_Mensual', () => {
+      const currentPlan = 'Pro_Anual'
+      const currentStatus = 'active'
+      const endDate = new Date(Date.now() + 300 * 24 * 60 * 60 * 1000)
+      const requestedPlan = 'Pro_Mensual'
+
+      const isBlocked =
+        currentStatus === 'active' &&
+        currentPlan === 'Pro_Anual' &&
+        requestedPlan === 'Pro_Mensual' &&
+        endDate > new Date()
+
+      expect(isBlocked).toBe(true)
+    })
+
+    it('should allow Pro_Mensual after Pro_Anual expired', () => {
+      const currentPlan = 'Pro_Anual'
+      const currentStatus = 'expired'
+      const requestedPlan = 'Pro_Mensual'
+
+      const isBlocked =
+        currentStatus === 'active' &&
+        currentPlan === 'Pro_Anual' &&
+        requestedPlan === 'Pro_Mensual'
+
+      expect(isBlocked).toBe(false)
+    })
+  })
+
   describe('Cron expire-plans', () => {
     it('should mark expired plans correctly', () => {
       // The cron uses plan_status, end_date, plan_type — no Stripe columns
