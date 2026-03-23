@@ -14,6 +14,15 @@ interface BillingPlan {
   days_remaining: number | null
 }
 
+interface Transaction {
+  id: string
+  buy_order: string
+  plan_type: string
+  amount: number
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled'
+  created_at: string
+}
+
 const plans = [
   {
     id: 'free',
@@ -53,9 +62,30 @@ const plans = [
   },
 ]
 
+function formatCLP(amount: number): string {
+  return amount.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' })
+}
+
+const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+  approved: { label: 'Aprobado', className: 'bg-green-100 text-green-700' },
+  rejected: { label: 'Rechazado', className: 'bg-red-100 text-red-700' },
+  pending: { label: 'Pendiente', className: 'bg-yellow-100 text-yellow-700' },
+  cancelled: { label: 'Cancelado', className: 'bg-gray-100 text-gray-500' },
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const config = STATUS_CONFIG[status] || { label: status, className: 'bg-gray-100 text-gray-500' }
+  return (
+    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${config.className}`}>
+      {config.label}
+    </span>
+  )
+}
+
 function FacturacionContent() {
   const searchParams = useSearchParams()
   const [billing, setBilling] = useState<BillingPlan | null>(null)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -74,11 +104,19 @@ function FacturacionContent() {
         const { data: { session } } = await supabase.auth.getSession()
         if (!session) return
 
-        const res = await fetch('/api/billing/plan', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        })
-        const json = await res.json()
-        if (json.success) setBilling(json.data)
+        const [planRes, txRes] = await Promise.all([
+          fetch('/api/billing/plan', {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          }),
+          fetch('/api/billing/transactions', {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          }),
+        ])
+        const planJson = await planRes.json()
+        if (planJson.success) setBilling(planJson.data)
+
+        const txJson = await txRes.json()
+        if (txJson.success) setTransactions(txJson.data)
       } catch (err) {
         console.error('Error fetching plan:', err)
       } finally {
@@ -110,8 +148,9 @@ function FacturacionContent() {
       })
       const json = await res.json()
       if (json.success && json.data.url && json.data.token) {
-        // Redirect to Webpay Plus with token
         window.location.href = `${json.data.url}?token_ws=${json.data.token}`
+      } else if (!json.success && json.error) {
+        setToast(json.error.message)
       }
     } catch (err) {
       console.error('Checkout error:', err)
@@ -236,6 +275,45 @@ function FacturacionContent() {
           )
         })}
       </div>
+
+      {/* Historial de transacciones */}
+      {transactions.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-lg font-bold text-gesti-dark mb-3">Historial de pagos</h2>
+          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50">
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">Orden</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">Plan</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500">Monto</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-500">Estado</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500">Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map((tx) => (
+                  <tr key={tx.id} className="border-b border-gray-50 last:border-0">
+                    <td className="py-3 px-4 text-gray-700 font-mono text-xs">{tx.buy_order}</td>
+                    <td className="py-3 px-4 text-gray-700">
+                      {tx.plan_type === 'Pro_Mensual' ? 'Pro Mensual' : tx.plan_type === 'Pro_Anual' ? 'Pro Anual' : tx.plan_type}
+                    </td>
+                    <td className="py-3 px-4 text-right text-gray-700">
+                      {formatCLP(tx.amount)}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <StatusBadge status={tx.status} />
+                    </td>
+                    <td className="py-3 px-4 text-right text-gray-500">
+                      {formatDate(tx.created_at)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
