@@ -201,10 +201,25 @@ describe('Caso 6: Cesantía TCP — trabajador siempre $0', () => {
 })
 
 // ============================================================
-// Caso 7: Licencia 15 días — prorrateo al 50%
+// Caso 7: Licencia 15 días con RIMA — prorrateo correcto
+//
+// RIMA prorrateo: cotiz = tasa × base × (diasTrab/30) + tasa × RIMA × (diasLic/30)
+// Cuando RIMA == bruto, cotización total == cotización completa (100%)
+// Cuando RIMA < bruto, cotización < 100%
 // ============================================================
-describe('Caso 7: Licencia 15 días — prorrateo 50%', () => {
-  // Calculamos primero el caso completo (30 días)
+describe('Caso 7: Licencia 15 días — prorrateo con RIMA', () => {
+  // Caso RIMA == bruto: cotizaciones deben ser iguales al caso completo
+  const inputRimaIgual: InputLiquidacion = {
+    sueldo_base: 600_000,
+    tipo_sueldo: 'bruto',
+    afp: 'Uno',
+    es_pensionado: false,
+    dias_trabajados: 15,
+    dias_licencia_medica: 15,
+    rima: 600_000,
+  }
+  const resultRimaIgual = calcularLiquidacion(inputRimaIgual)
+
   const inputCompleto: InputLiquidacion = {
     sueldo_base: 600_000,
     tipo_sueldo: 'bruto',
@@ -214,39 +229,47 @@ describe('Caso 7: Licencia 15 días — prorrateo 50%', () => {
   }
   const completo = calcularLiquidacion(inputCompleto)
 
-  // Caso con 15 días trabajados (licencia 15 días)
-  const inputParcial: InputLiquidacion = {
+  it('sueldo base ajustado = 50% del bruto', () => {
+    expect(resultRimaIgual.haberes.sueldo_base).toBe(Math.round(600_000 * 0.5))
+  })
+
+  it('AFP con RIMA==bruto = cotización completa', () => {
+    expect(resultRimaIgual.descuentos_trabajador.afp).toBe(
+      completo.descuentos_trabajador.afp
+    )
+  })
+
+  it('Salud con RIMA==bruto = cotización completa', () => {
+    expect(resultRimaIgual.descuentos_trabajador.salud).toBe(
+      completo.descuentos_trabajador.salud
+    )
+  })
+
+  it('Cesantía empleador con RIMA==bruto = cotización completa', () => {
+    expect(resultRimaIgual.cotizaciones_empleador.cesantia).toBe(
+      completo.cotizaciones_empleador.cesantia
+    )
+  })
+
+  // Caso RIMA < bruto: cotizaciones reducidas
+  const inputRimaMenor: InputLiquidacion = {
     sueldo_base: 600_000,
     tipo_sueldo: 'bruto',
     afp: 'Uno',
     es_pensionado: false,
     dias_trabajados: 15,
     dias_licencia_medica: 15,
-    rima: 600_000,
+    rima: 400_000,
   }
-  const parcial = calcularLiquidacion(inputParcial)
+  const resultRimaMenor = calcularLiquidacion(inputRimaMenor)
 
-  it('sueldo base ajustado = 50% del bruto', () => {
-    expect(parcial.haberes.sueldo_base).toBe(Math.round(600_000 * 0.5))
-  })
-
-  it('AFP prorrateado al ~50%', () => {
-    // Tolerancia de $1 por redondeo
-    expect(parcial.descuentos_trabajador.afp).toBeCloseTo(
-      completo.descuentos_trabajador.afp * 0.5, -1
+  it('AFP con RIMA < bruto: menor que caso completo', () => {
+    expect(resultRimaMenor.descuentos_trabajador.afp).toBeLessThan(
+      completo.descuentos_trabajador.afp
     )
-  })
-
-  it('Salud prorrateada al ~50%', () => {
-    expect(parcial.descuentos_trabajador.salud).toBeCloseTo(
-      completo.descuentos_trabajador.salud * 0.5, -1
-    )
-  })
-
-  it('Cotizaciones empleador prorrateadas al ~50%', () => {
-    expect(parcial.cotizaciones_empleador.cesantia).toBeCloseTo(
-      completo.cotizaciones_empleador.cesantia * 0.5, -1
-    )
+    // AFP = 0.1046 * 600000 * 15/30 + 0.1046 * 400000 * 15/30
+    // = 0.1046 * 300000 + 0.1046 * 200000 = 31380 + 20920 = 52300
+    expect(resultRimaMenor.descuentos_trabajador.afp).toBe(52300)
   })
 })
 

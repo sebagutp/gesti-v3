@@ -112,6 +112,7 @@ export interface IndicadoresPrevisionales {
     cap_individual_afp: number
     expectativa_vida: number
     rentabilidad_protegida: number
+    ley_sanna: number
   }
 
   rli_exento_hasta: number
@@ -141,8 +142,9 @@ export interface Liquidacion {
   periodo: string
   input: InputLiquidacion
   resultado: ResultadoLiquidacion
-  estado: 'borrador' | 'emitida' | 'enviada' | 'pagada'
-  pdf_url?: string
+  estado: 'calculada' | 'emitida' | 'enviada' | 'pagada'
+  pdf_liquidacion_url?: string
+  pdf_resumen_url?: string
   motor_version: string
   created_at: string
   updated_at: string
