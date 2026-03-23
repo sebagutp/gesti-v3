@@ -243,7 +243,23 @@ CREATE TABLE simulaciones (
 **RLS:** Public insert (anon users), private select
 **Limpieza:** Trigger para borrar registros > 30 días
 
-### 11. `public.system_config`
+### 11. `public.billing_transactions`
+```sql
+CREATE TABLE billing_transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES user_profiles(id) ON DELETE CASCADE,
+  buy_order TEXT NOT NULL,
+  plan_type TEXT NOT NULL,  -- Pro_Mensual|Pro_Anual
+  amount NUMERIC NOT NULL,
+  status TEXT DEFAULT 'pending',  -- pending|approved|rejected|cancelled
+  tbk_response JSONB,
+  created_at TIMESTAMP DEFAULT now()
+)
+```
+
+**RLS:** `SELECT` donde `auth.uid() = user_id`
+
+### 12. `public.system_config`
 ```sql
 CREATE TABLE system_config (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

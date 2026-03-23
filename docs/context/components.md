@@ -306,6 +306,38 @@ interface ResultadoLiquidacionProps {
 
 ---
 
+### Shared Components
+
+#### `NotificationBell.tsx`
+Campana de notificaciones en el header con badge de conteo.
+
+**Props:**
+```typescript
+// No props — usa API fetch interno para obtener notificaciones del usuario
+```
+
+**Comportamiento:**
+- Muestra badge rojo con número de notificaciones no leídas
+- Click abre dropdown con lista de notificaciones recientes
+- Click en notificación la marca como leída via `/api/notificaciones/[id]/read`
+
+---
+
+#### `ChatBubble.tsx`
+Burbuja flotante de chat IA (bottom-right).
+
+**Props:**
+```typescript
+// No props — componente autónomo con estado interno
+```
+
+**Comportamiento:**
+- Botón flotante en esquina inferior derecha
+- Click abre panel de chat con historial
+- Integra con chatbot IA para consultas rápidas
+
+---
+
 ## Design Principles
 
 1. **Mobile-first** — Diseñar mobile primero, luego desktop

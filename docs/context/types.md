@@ -236,6 +236,17 @@ interface PaginatedResponse<T> {
     pages: number
   }
 }
+
+interface BillingTransaction {
+  id: string
+  user_id: string
+  buy_order: string
+  plan_type: PlanType
+  amount: number
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled'
+  tbk_response?: Record<string, unknown>
+  created_at: string
+}
 ```
 
 ### `forms.ts`

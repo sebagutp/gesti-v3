@@ -2,7 +2,7 @@
 
 ## Componente: MultiStepForm
 
-Ubicación: `src/components/MultiStepForm.tsx`
+Ubicación: `src/components/forms/MultiStepForm.tsx`
 
 Una pregunta por pantalla estilo Typeform. Transiciones suaves con Framer Motion.
 
@@ -87,7 +87,7 @@ validation: {
 
 ### 1. Formulario Contrato
 
-**Ubicación:** `src/components/forms/FormContrato.tsx`
+**Ubicación:** `src/components/forms/ContractForm/steps.ts` + `MultiStepForm.tsx`
 
 **4 Secciones:**
 1. **Empleador** (6-8 pasos)
@@ -125,7 +125,7 @@ validation: {
 
 ### 2. Formulario Liquidación
 
-**Ubicación:** `src/components/forms/FormLiquidacion.tsx`
+**Ubicación:** `src/components/forms/LiquidacionForm.tsx`
 
 **3 Secciones:**
 1. **Datos Mensuales** (4-5 pasos)
@@ -150,7 +150,7 @@ validation: {
 
 ### 3. Formulario Permisos
 
-**Ubicación:** `src/components/forms/FormPermisos.tsx`
+**Ubicación:** `src/components/forms/PermisoForm.tsx`
 
 **3 Secciones:**
 1. **Tipo de Permiso** (1 paso)
