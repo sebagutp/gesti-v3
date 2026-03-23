@@ -1,6 +1,6 @@
 // ============================================================
-// GET/POST /api/indicadores — CRUD indicadores previsionales
-// Rama B — HU-21
+// GET/POST/DELETE /api/indicadores — CRUD indicadores previsionales
+// Rama B — HU-21 | HU-303 — Sprint 3, Rama A (cache + fallback)
 // ============================================================
 
 import { NextRequest } from 'next/server'
@@ -26,6 +26,14 @@ function setCache(mes: string, data: IndicadoresPrevisionales): void {
   cache.set(mes, { data, expiresAt: Date.now() + CACHE_TTL_MS })
 }
 
+/** Headers de cache HTTP para respuestas exitosas */
+function cacheHeaders(xCache: string): Record<string, string> {
+  return {
+    'X-Cache': xCache,
+    'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
+  }
+}
+
 // ============================================================
 // GET /api/indicadores?mes=2026-03
 // ============================================================
@@ -43,14 +51,14 @@ export async function GET(request: NextRequest) {
       } satisfies ApiResponse<never>, { status: 400 })
     }
 
-    // Check cache first
+    // Check in-memory cache first
     const cached = getCached(mes)
     if (cached) {
       return Response.json({
         success: true,
         data: cached,
       } satisfies ApiResponse<IndicadoresPrevisionales>, {
-        headers: { 'X-Cache': 'HIT' },
+        headers: cacheHeaders('HIT'),
       })
     }
 
@@ -63,14 +71,38 @@ export async function GET(request: NextRequest) {
       .single()
 
     if (error || !data) {
-      // Fallback to hardcoded defaults for 2026-03
+      // Fallback 1: hardcoded defaults for 2026-03
       if (mes === '2026-03') {
         setCache(mes, INDICADORES_MARZO_2026)
         return Response.json({
           success: true,
           data: INDICADORES_MARZO_2026,
         } satisfies ApiResponse<IndicadoresPrevisionales>, {
-          headers: { 'X-Cache': 'DEFAULT' },
+          headers: cacheHeaders('DEFAULT'),
+        })
+      }
+
+      // Fallback 2: try the most recent available month
+      const { data: latest } = await supabase
+        .from('indicadores_previsionales')
+        .select('*')
+        .lt('mes', mes)
+        .order('mes', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (latest) {
+        // Return latest available but flag it
+        const indicadores = latest as IndicadoresPrevisionales
+        return Response.json({
+          success: true,
+          data: indicadores,
+          warning: `Indicadores del mes ${mes} no disponibles. Se retornan los de ${indicadores.mes}.`,
+        }, {
+          headers: {
+            ...cacheHeaders('FALLBACK'),
+            'X-Indicadores-Mes-Real': indicadores.mes,
+          },
         })
       }
 
@@ -90,7 +122,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: indicadores,
     } satisfies ApiResponse<IndicadoresPrevisionales>, {
-      headers: { 'X-Cache': 'MISS' },
+      headers: cacheHeaders('MISS'),
     })
   } catch {
     return Response.json({
@@ -101,6 +133,35 @@ export async function GET(request: NextRequest) {
       },
     } satisfies ApiResponse<never>, { status: 500 })
   }
+}
+
+// ============================================================
+// DELETE /api/indicadores?mes=2026-03
+// Invalidar cache (usado tras actualización de Edge Function)
+// ============================================================
+export async function DELETE(request: NextRequest) {
+  const authHeader = request.headers.get('authorization')
+  const cronSecret = process.env.CRON_SECRET
+
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    return Response.json(
+      { success: false, error: { code: 'NO_AUTH', message: 'No autorizado' } },
+      { status: 401 }
+    )
+  }
+
+  const mes = request.nextUrl.searchParams.get('mes')
+
+  if (mes) {
+    cache.delete(mes)
+  } else {
+    cache.clear()
+  }
+
+  return Response.json({
+    success: true,
+    data: { invalidated: mes || 'all' },
+  })
 }
 
 // ============================================================
