@@ -65,6 +65,19 @@ export async function POST(
       console.error('Error actualizando contrato:', updateError)
     }
 
+    // Insert notification
+    try {
+      await supabase.from('notificaciones').insert({
+        user_id: user.id,
+        tipo: 'success',
+        titulo: 'Contrato generado',
+        mensaje: `El contrato de ${c.nombre_trabajador} ${c.apellidos_trabajador} ha sido generado exitosamente.`,
+        leida: false,
+      })
+    } catch {
+      // non-blocking
+    }
+
     // Send email to worker and employer
     try {
       await enviarEmailContrato(
