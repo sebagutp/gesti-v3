@@ -1,10 +1,11 @@
 // ============================================================
-// WhatsApp Message Handler — Gesti V3.1 (Rama D) — HU-330
+// WhatsApp Message Handler — Gesti V3.1 (Rama D) — HU-330/331
 // Parsea mensajes entrantes y despacha al flujo correspondiente
 // ============================================================
 
 import type { WAWebhookPayload, ParsedMessage } from './types'
-import { sendTextMessage } from './client'
+import { sendTextMessage, sendButtonMessage } from './client'
+import { SIMULATION_STEPS, sendStepPrompt, processStepResponse } from './simulation-flow'
 
 /** Parsear payload de Meta Cloud API y extraer mensajes */
 export function parseIncomingMessages(payload: WAWebhookPayload): ParsedMessage[] {
@@ -50,19 +51,90 @@ export function parseIncomingMessages(payload: WAWebhookPayload): ParsedMessage[
   return messages
 }
 
+// In-memory conversation state (replaced by Supabase in HU-333)
+const conversations = new Map<string, {
+  mode: 'menu' | 'simulacion' | 'consulta'
+  currentStep: number
+  data: Record<string, unknown>
+  updatedAt: number
+}>()
+
+const TIMEOUT_MS = 30 * 60 * 1000 // 30 minutos
+
+function getConversation(phone: string) {
+  const conv = conversations.get(phone)
+  if (conv && Date.now() - conv.updatedAt > TIMEOUT_MS) {
+    conversations.delete(phone)
+    return null
+  }
+  return conv ?? null
+}
+
 /** Manejar un mensaje individual (punto de entrada principal) */
 export async function handleMessage(parsed: ParsedMessage): Promise<void> {
+  const { from, text, interactiveId } = parsed
+
   if (parsed.type === 'unsupported') {
-    await sendTextMessage(
-      parsed.from,
-      '⚠️ Lo siento, solo puedo procesar mensajes de texto. Escribe *hola* para comenzar.'
-    )
+    await sendTextMessage(from, 'Solo puedo procesar mensajes de texto. Escribe *hola* para comenzar.')
     return
   }
 
-  // Placeholder — HU-331/332/333 implementarán los flujos completos
-  await sendTextMessage(
-    parsed.from,
-    '👋 ¡Hola! Soy el asistente de *Gesti*. Pronto podré ayudarte con simulaciones de liquidación y consultas laborales. Estamos trabajando en ello.'
+  const lower = text.toLowerCase()
+
+  // Check for reset commands
+  if (['hola', 'menu', 'menú', 'inicio', 'reiniciar', 'salir'].includes(lower)) {
+    conversations.delete(from)
+    await sendMainMenu(from)
+    return
+  }
+
+  const conv = getConversation(from)
+
+  // No active conversation — show menu
+  if (!conv) {
+    // Check if this is a menu selection
+    if (interactiveId === 'menu_simular' || lower === 'simular' || lower === '1') {
+      conversations.set(from, { mode: 'simulacion', currentStep: 0, data: {}, updatedAt: Date.now() })
+      await sendStepPrompt(from, 0, {})
+      return
+    }
+    if (interactiveId === 'menu_consulta' || lower === 'consulta' || lower === '2') {
+      conversations.set(from, { mode: 'consulta', currentStep: 0, data: {}, updatedAt: Date.now() })
+      await sendTextMessage(from, '🤖 *Modo consulta laboral*\n\nPregúntame sobre legislación laboral de Trabajadores de Casa Particular en Chile.\n\nEscribe *menu* para volver al menú.')
+      return
+    }
+    await sendMainMenu(from)
+    return
+  }
+
+  // Active simulation flow
+  if (conv.mode === 'simulacion') {
+    const result = await processStepResponse(from, conv.currentStep, text, interactiveId, conv.data)
+    if (result.completed) {
+      conversations.delete(from)
+    } else {
+      conv.currentStep = result.nextStep
+      conv.data = result.data
+      conv.updatedAt = Date.now()
+    }
+    return
+  }
+
+  // Active consultation flow (placeholder — HU-332 will implement Claude AI)
+  if (conv.mode === 'consulta') {
+    conv.updatedAt = Date.now()
+    await sendTextMessage(from, '🔧 El modo consulta IA estará disponible pronto. Escribe *menu* para volver.')
+    return
+  }
+}
+
+async function sendMainMenu(to: string): Promise<void> {
+  await sendButtonMessage(
+    to,
+    '👋 *¡Hola! Soy el asistente de Gesti*\n\n¿Qué te gustaría hacer?\n\n1️⃣ *Simular liquidación* — Calcula sueldo líquido, descuentos y costo empleador\n2️⃣ *Consulta laboral* — Pregunta sobre legislación TCP chilena',
+    [
+      { id: 'menu_simular', title: 'Simular liquidación' },
+      { id: 'menu_consulta', title: 'Consulta laboral' },
+    ]
   )
 }
