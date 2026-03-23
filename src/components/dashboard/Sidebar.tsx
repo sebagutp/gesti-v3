@@ -31,7 +31,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           />
         </Link>
         {onClose && (
-          <button onClick={onClose} className="md:hidden text-white/80 hover:text-white text-xl">
+          <button onClick={onClose} className="md:hidden text-white/80 hover:text-white text-xl" aria-label="Cerrar menú">
             ✕
           </button>
         )}
@@ -46,6 +46,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
               <Link
                 href={item.href}
                 onClick={onClose}
+                aria-current={isActive ? 'page' : undefined}
                 className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
                   isActive
                     ? 'bg-white/20 font-semibold'

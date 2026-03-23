@@ -26,6 +26,7 @@ export const StepField = forwardRef<
     case 'rut':
       return (
         <input
+          id={`field-${step.id}`}
           ref={ref as React.Ref<HTMLInputElement>}
           type={step.type === 'rut' ? 'text' : step.type}
           value={strValue}
@@ -39,6 +40,7 @@ export const StepField = forwardRef<
     case 'number':
       return (
         <input
+          id={`field-${step.id}`}
           ref={ref as React.Ref<HTMLInputElement>}
           type="number"
           value={value !== undefined && value !== '' ? String(value) : ''}
@@ -55,6 +57,7 @@ export const StepField = forwardRef<
     case 'textarea':
       return (
         <textarea
+          id={`field-${step.id}`}
           ref={ref as React.Ref<HTMLTextAreaElement>}
           value={strValue}
           onChange={(e) => onChange(e.target.value)}
@@ -67,6 +70,7 @@ export const StepField = forwardRef<
     case 'select':
       return (
         <select
+          id={`field-${step.id}`}
           ref={ref as React.Ref<HTMLSelectElement>}
           value={strValue}
           onChange={(e) => onChange(e.target.value)}

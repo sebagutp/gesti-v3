@@ -134,6 +134,7 @@ export function LiquidacionTable({
         <input
           type="text"
           placeholder="Buscar por período o monto..."
+          aria-label="Buscar liquidaciones"
           value={search}
           onChange={(e) => {
             setSearch(e.target.value)
@@ -184,17 +185,17 @@ export function LiquidacionTable({
               <TableCell>
                 <div className="flex items-center justify-end gap-1">
                   {onDownloadPDF && (
-                    <Button variant="ghost" size="icon" onClick={() => onDownloadPDF(liq.id)} title="Descargar PDF">
+                    <Button variant="ghost" size="icon" onClick={() => onDownloadPDF(liq.id)} aria-label="Descargar PDF">
                       <Download className="h-4 w-4" />
                     </Button>
                   )}
                   {onSend && (
-                    <Button variant="ghost" size="icon" onClick={() => onSend(liq.id)} title="Enviar">
+                    <Button variant="ghost" size="icon" onClick={() => onSend(liq.id)} aria-label="Enviar liquidación">
                       <Send className="h-4 w-4" />
                     </Button>
                   )}
                   {onEdit && (
-                    <Button variant="ghost" size="icon" onClick={() => onEdit(liq.id)} title="Editar">
+                    <Button variant="ghost" size="icon" onClick={() => onEdit(liq.id)} aria-label="Editar liquidación">
                       <Pencil className="h-4 w-4" />
                     </Button>
                   )}
@@ -217,6 +218,7 @@ export function LiquidacionTable({
               size="icon"
               disabled={safePage <= 1}
               onClick={() => setPage((p) => p - 1)}
+              aria-label="Página anterior"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -228,6 +230,7 @@ export function LiquidacionTable({
               size="icon"
               disabled={safePage >= totalPages}
               onClick={() => setPage((p) => p + 1)}
+              aria-label="Página siguiente"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
