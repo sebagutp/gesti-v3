@@ -1,42 +1,6 @@
-'use client'
-
-import { Suspense, useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-function SuccessContent() {
-  const searchParams = useSearchParams()
-  const sessionId = searchParams.get('session_id')
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
-
-  useEffect(() => {
-    if (sessionId) {
-      setStatus('success')
-    } else {
-      setStatus('error')
-    }
-  }, [sessionId])
-
-  if (status === 'loading') {
-    return (
-      <div className="max-w-md mx-auto text-center py-16">
-        <p className="text-gray-500">Verificando pago...</p>
-      </div>
-    )
-  }
-
-  if (status === 'error') {
-    return (
-      <div className="max-w-md mx-auto text-center py-16">
-        <h1 className="text-2xl font-bold text-gesti-dark mb-4">Error</h1>
-        <p className="text-gray-500 mb-6">No se pudo verificar el pago.</p>
-        <Link href="/facturacion" className="text-gesti-teal underline">
-          Volver a facturación
-        </Link>
-      </div>
-    )
-  }
-
+export default function FacturacionSuccessPage() {
   return (
     <div className="max-w-md mx-auto text-center py-16">
       <div className="w-16 h-16 rounded-full bg-gesti-verde/10 flex items-center justify-center mx-auto mb-6">
@@ -61,13 +25,5 @@ function SuccessContent() {
         </Link>
       </div>
     </div>
-  )
-}
-
-export default function FacturacionSuccessPage() {
-  return (
-    <Suspense fallback={<div className="max-w-md mx-auto text-center py-16"><p className="text-gray-500">Cargando...</p></div>}>
-      <SuccessContent />
-    </Suspense>
   )
 }

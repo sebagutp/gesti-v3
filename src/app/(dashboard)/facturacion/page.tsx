@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { createBrowserClient } from '@/lib/supabase/client'
 
 interface BillingPlan {
@@ -8,7 +10,8 @@ interface BillingPlan {
   plan_status: string
   start_date: string | null
   end_date: string | null
-  has_subscription: boolean
+  has_active_plan: boolean
+  days_remaining: number | null
 }
 
 const plans = [
@@ -34,7 +37,7 @@ const plans = [
       'Soporte prioritario',
     ],
     highlighted: true,
-    stripePlan: 'Pro_Mensual' as const,
+    planKey: 'Pro_Mensual' as const,
   },
   {
     id: 'Pro_Anual',
@@ -46,14 +49,23 @@ const plans = [
       'Ahorro de 20%',
       'Equivale a $7.920/mes',
     ],
-    stripePlan: 'Pro_Anual' as const,
+    planKey: 'Pro_Anual' as const,
   },
 ]
 
-export default function FacturacionPage() {
+function FacturacionContent() {
+  const searchParams = useSearchParams()
   const [billing, setBilling] = useState<BillingPlan | null>(null)
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+
+  useEffect(() => {
+    const status = searchParams.get('status')
+    if (status === 'cancelled') setToast('Pago cancelado por el usuario.')
+    else if (status === 'rejected') setToast('Pago rechazado. Intenta con otro medio de pago.')
+    else if (status === 'timeout') setToast('Tiempo agotado en el formulario de pago.')
+  }, [searchParams])
 
   useEffect(() => {
     async function fetchPlan() {
@@ -77,9 +89,12 @@ export default function FacturacionPage() {
   }, [])
 
   const currentPlan = billing?.plan_type || 'free'
+  const isExpiredOrExpiring = billing?.plan_status === 'expired' ||
+    (billing?.days_remaining !== null && billing?.days_remaining !== undefined && billing.days_remaining < 7)
 
   async function handleCheckout(plan: 'Pro_Mensual' | 'Pro_Anual') {
     setCheckoutLoading(plan)
+    setToast(null)
     try {
       const supabase = createBrowserClient()
       const { data: { session } } = await supabase.auth.getSession()
@@ -94,32 +109,15 @@ export default function FacturacionPage() {
         body: JSON.stringify({ plan }),
       })
       const json = await res.json()
-      if (json.success && json.data.url) {
-        window.location.href = json.data.url
+      if (json.success && json.data.url && json.data.token) {
+        // Redirect to Webpay Plus with token
+        window.location.href = `${json.data.url}?token_ws=${json.data.token}`
       }
     } catch (err) {
       console.error('Checkout error:', err)
+      setToast('Error al iniciar el pago. Intenta nuevamente.')
     } finally {
       setCheckoutLoading(null)
-    }
-  }
-
-  async function handlePortal() {
-    try {
-      const supabase = createBrowserClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
-      const res = await fetch('/api/billing/portal', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      })
-      const json = await res.json()
-      if (json.success && json.data.url) {
-        window.location.href = json.data.url
-      }
-    } catch (err) {
-      console.error('Portal error:', err)
     }
   }
 
@@ -140,13 +138,21 @@ export default function FacturacionPage() {
   return (
     <div className="max-w-4xl">
       <h1 className="text-2xl font-bold text-gesti-dark mb-2">Facturación</h1>
+
+      {toast && (
+        <div className="mb-4 p-3 rounded-lg bg-orange-50 border border-orange-200 text-sm text-orange-700">
+          {toast}
+          <button onClick={() => setToast(null)} className="ml-2 font-bold">×</button>
+        </div>
+      )}
+
       <p className="text-sm text-gray-500 mb-2">
         Tu plan actual: <span className="font-semibold text-gesti-teal">
           {plans.find(p => p.id === currentPlan)?.name || 'Free'}
         </span>
-        {billing?.plan_status === 'active' && billing?.end_date && (
-          <span className="text-gray-400 ml-2">
-            (vigente hasta {formatDate(billing.end_date)})
+        {billing?.plan_status === 'active' && billing?.days_remaining !== null && billing.days_remaining > 0 && (
+          <span className={`ml-2 ${billing.days_remaining < 7 ? 'text-orange-500 font-semibold' : 'text-gray-400'}`}>
+            ({billing.days_remaining} días restantes — vence {formatDate(billing.end_date)})
           </span>
         )}
         {billing?.plan_status === 'cancelled' && (
@@ -157,18 +163,18 @@ export default function FacturacionPage() {
         )}
       </p>
 
-      {billing?.has_subscription && (
-        <button
-          onClick={handlePortal}
-          className="text-sm text-gesti-teal underline mb-6 block"
-        >
-          Gestionar suscripción en Stripe
-        </button>
+      {isExpiredOrExpiring && currentPlan !== 'free' && (
+        <div className="mb-4 p-3 rounded-lg bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
+          {billing?.plan_status === 'expired'
+            ? 'Tu plan ha expirado. Renueva para seguir usando las funciones Pro.'
+            : `Tu plan vence en ${billing?.days_remaining} días. Renueva para no perder acceso.`}
+        </div>
       )}
 
       <div className="grid md:grid-cols-3 gap-4 mt-4">
         {plans.map((plan) => {
-          const isCurrent = plan.id === currentPlan
+          const isCurrent = plan.id === currentPlan && billing?.plan_status === 'active'
+          const canRenew = plan.id === currentPlan && isExpiredOrExpiring
           return (
             <div
               key={plan.id}
@@ -196,23 +202,27 @@ export default function FacturacionPage() {
                   </li>
                 ))}
               </ul>
-              {plan.stripePlan ? (
+              {plan.planKey ? (
                 <button
                   disabled={isCurrent || checkoutLoading !== null}
-                  onClick={() => handleCheckout(plan.stripePlan!)}
+                  onClick={() => handleCheckout(plan.planKey!)}
                   className={`w-full py-2 rounded-lg text-sm font-semibold transition-colors ${
                     isCurrent
                       ? 'bg-gray-100 text-gray-400 cursor-default'
-                      : plan.highlighted
-                        ? 'bg-gesti-verde text-white hover:bg-gesti-verde/90'
-                        : 'bg-gesti-teal text-white hover:bg-gesti-teal/90'
+                      : canRenew
+                        ? 'bg-orange-500 text-white hover:bg-orange-600'
+                        : plan.highlighted
+                          ? 'bg-gesti-verde text-white hover:bg-gesti-verde/90'
+                          : 'bg-gesti-teal text-white hover:bg-gesti-teal/90'
                   }`}
                 >
                   {isCurrent
                     ? 'Plan actual'
-                    : checkoutLoading === plan.stripePlan
-                      ? 'Redirigiendo...'
-                      : 'Contratar'}
+                    : canRenew
+                      ? 'Renovar plan'
+                      : checkoutLoading === plan.planKey
+                        ? 'Redirigiendo a Webpay...'
+                        : 'Contratar'}
                 </button>
               ) : (
                 <button
@@ -227,5 +237,18 @@ export default function FacturacionPage() {
         })}
       </div>
     </div>
+  )
+}
+
+export default function FacturacionPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-4xl">
+        <h1 className="text-2xl font-bold text-gesti-dark mb-2">Facturación</h1>
+        <p className="text-sm text-gray-400">Cargando...</p>
+      </div>
+    }>
+      <FacturacionContent />
+    </Suspense>
   )
 }
