@@ -55,11 +55,55 @@ export const INDICADORES_MARZO_2026: IndicadoresPrevisionales = {
     cap_individual_afp: 0.001,
     expectativa_vida: 0.009,
     rentabilidad_protegida: 0,
+    ley_sanna: 0.003,
   },
 
   rli_exento_hasta: 943501,
   created_at: '2026-03-01T00:00:00Z',
   updated_at: '2026-03-01T00:00:00Z',
+}
+
+// ============================================================
+// Reforma Previsional Ley 21.735 — Gradualidad por fecha
+// ============================================================
+export function obtenerTasasReforma(periodo: string): {
+  cap_individual_afp: number
+  expectativa_vida: number
+  rentabilidad_protegida: number
+  ley_sanna: number
+} {
+  const [anioStr, mesStr] = periodo.split('-')
+  const anio = parseInt(anioStr, 10)
+  const mes = parseInt(mesStr, 10)
+
+  // Capitalización Individual AFP — gradualidad
+  let capIndividual: number
+  if (anio < 2026) capIndividual = 0
+  else if (anio < 2027) capIndividual = 0.001   // 0,1% (2026)
+  else if (anio < 2029) capIndividual = 0.003   // 0,3% (2027-2028)
+  else if (anio < 2033) capIndividual = 0.005   // 0,5% (2029-2032)
+  else capIndividual = 0.045                     // 4,5% (2033+)
+
+  // Expectativa de vida
+  let expectativaVida: number
+  if (anio < 2026) expectativaVida = 0
+  else if (anio === 2026 && mes < 8) expectativaVida = 0.009  // 0,9%
+  else expectativaVida = 0.010                                  // 1,0% desde 08/2026
+
+  // Rentabilidad protegida
+  let rentabilidadProtegida: number
+  if (anio < 2026 || (anio === 2026 && mes < 8)) rentabilidadProtegida = 0
+  else rentabilidadProtegida = 0.009  // 0,9% desde 08/2026
+
+  // Ley SANNA
+  const leySanna = 0.003 // 0,3% fijo
+
+  return {
+    cap_individual_afp: capIndividual,
+    expectativa_vida: expectativaVida,
+    rentabilidad_protegida: rentabilidadProtegida,
+    ley_sanna: leySanna,
+  }
 }
 
 // ============================================================
@@ -139,6 +183,28 @@ export function resolverBrutoDesdeNeto(
 }
 
 // ============================================================
+// RIMA: Prorrateo de cotizaciones con licencia médica parcial
+//
+// cotización_trabajado = tasa × base_actual × (días_trabajados / 30)
+// cotización_licencia  = tasa × (RIMA × días_licencia / 30)
+// cotización_total     = cotización_trabajado + cotización_licencia
+// ============================================================
+function prorratearCotizacion(
+  tasa: number,
+  baseActual: number,
+  rima: number,
+  diasTrabajados: number,
+  diasLicencia: number,
+  tope?: number,
+): number {
+  const baseTrabajado = tope ? Math.min(baseActual, tope) : baseActual
+  const baseRima = tope ? Math.min(rima, tope) : rima
+  const cotizTrabajado = tasa * baseTrabajado * (diasTrabajados / 30)
+  const cotizLicencia = tasa * baseRima * (diasLicencia / 30)
+  return Math.round(cotizTrabajado + cotizLicencia)
+}
+
+// ============================================================
 // Motor Principal — calcularLiquidacion (11 pasos)
 // ============================================================
 export function calcularLiquidacion(
@@ -166,6 +232,8 @@ export function calcularLiquidacion(
 
   // ── Paso 3: Ajustar por días trabajados y horas extra ──
   const diasTrabajados = input.dias_trabajados
+  const diasLicencia = input.dias_licencia_medica ?? 0
+  const tieneRIMA = diasLicencia > 0 && diasLicencia < 30 && input.rima
   const factorDias = diasTrabajados / 30
 
   const sueldoBaseAjustado = Math.round(brutoMensual * factorDias)
@@ -176,11 +244,26 @@ export function calcularLiquidacion(
   const totalImponible = sueldoBaseAjustado + horasExtraMonto + gratificacion
 
   // ── Paso 4: AFP del trabajador ──
-  const baseAfpTrabajador = Math.min(totalImponible, indicadores.tope_afp)
-  const afpTrabajador = Math.round(baseAfpTrabajador * tasaAFP)
+  // Con RIMA: prorratear entre días trabajados y días licencia
+  let afpTrabajador: number
+  if (tieneRIMA) {
+    afpTrabajador = prorratearCotizacion(
+      tasaAFP, brutoMensual, input.rima!, diasTrabajados, diasLicencia, indicadores.tope_afp,
+    )
+  } else {
+    const baseAfpTrabajador = Math.min(totalImponible, indicadores.tope_afp)
+    afpTrabajador = Math.round(baseAfpTrabajador * tasaAFP)
+  }
 
   // ── Paso 5: Salud del trabajador (7% fijo) ──
-  const saludTrabajador = Math.round(totalImponible * 0.07)
+  let saludTrabajador: number
+  if (tieneRIMA) {
+    saludTrabajador = prorratearCotizacion(
+      0.07, brutoMensual, input.rima!, diasTrabajados, diasLicencia,
+    )
+  } else {
+    saludTrabajador = Math.round(totalImponible * 0.07)
+  }
 
   // ── Paso 6: APV ──
   const apvMonto = input.apv_monto ?? 0
@@ -225,29 +308,68 @@ export function calcularLiquidacion(
   const liquido = totalHaberes - totalDescuentos
 
   // ── Paso 11: Cotizaciones empleador ──
-  const baseCotizEmpleador = Math.min(totalImponible, indicadores.tope_cesantia)
-  const baseAfpEmpleador = Math.min(totalImponible, indicadores.tope_afp)
   const esPensionado = input.es_pensionado
 
-  const sis = Math.round(baseAfpEmpleador * indicadores.tasas.sis)
-  const isl = Math.round(baseCotizEmpleador * indicadores.tasas.isl)
-  const indemnizacion = Math.round(baseCotizEmpleador * indicadores.tasas.indemnizacion)
-  const cesantiaEmpleador = Math.round(baseCotizEmpleador * indicadores.tasas.cesantia_tcp)
+  // Obtener tasas reforma con gradualidad según periodo
+  const tasasReforma = obtenerTasasReforma(indicadores.mes)
 
-  // Reforma previsional — pensionados exentos
-  const afpEmpleador = esPensionado
-    ? 0
-    : Math.round(baseAfpEmpleador * indicadores.reforma.cap_individual_afp)
-  const expectativaVida = esPensionado
-    ? 0
-    : Math.round(baseAfpEmpleador * indicadores.reforma.expectativa_vida)
-  const rentabilidadProtegida = esPensionado
-    ? 0
-    : Math.round(baseAfpEmpleador * indicadores.reforma.rentabilidad_protegida)
+  let sis: number, isl: number, indemnizacion: number, cesantiaEmpleador: number
+  let afpEmpleador: number, expectativaVida: number, rentabilidadProtegida: number
+  let leySanna: number
+
+  if (tieneRIMA) {
+    // Prorratear cotizaciones empleador con RIMA
+    sis = prorratearCotizacion(
+      indicadores.tasas.sis, brutoMensual, input.rima!, diasTrabajados, diasLicencia, indicadores.tope_afp,
+    )
+    isl = prorratearCotizacion(
+      indicadores.tasas.isl, brutoMensual, input.rima!, diasTrabajados, diasLicencia, indicadores.tope_cesantia,
+    )
+    indemnizacion = prorratearCotizacion(
+      indicadores.tasas.indemnizacion, brutoMensual, input.rima!, diasTrabajados, diasLicencia, indicadores.tope_cesantia,
+    )
+    cesantiaEmpleador = prorratearCotizacion(
+      indicadores.tasas.cesantia_tcp, brutoMensual, input.rima!, diasTrabajados, diasLicencia, indicadores.tope_cesantia,
+    )
+
+    // Reforma previsional — pensionados exentos
+    afpEmpleador = esPensionado ? 0 : prorratearCotizacion(
+      tasasReforma.cap_individual_afp, brutoMensual, input.rima!, diasTrabajados, diasLicencia, indicadores.tope_afp,
+    )
+    expectativaVida = esPensionado ? 0 : prorratearCotizacion(
+      tasasReforma.expectativa_vida, brutoMensual, input.rima!, diasTrabajados, diasLicencia, indicadores.tope_afp,
+    )
+    rentabilidadProtegida = esPensionado ? 0 : prorratearCotizacion(
+      tasasReforma.rentabilidad_protegida, brutoMensual, input.rima!, diasTrabajados, diasLicencia, indicadores.tope_afp,
+    )
+    leySanna = prorratearCotizacion(
+      tasasReforma.ley_sanna, brutoMensual, input.rima!, diasTrabajados, diasLicencia, indicadores.tope_afp,
+    )
+  } else {
+    const baseCotizEmpleador = Math.min(totalImponible, indicadores.tope_cesantia)
+    const baseAfpEmpleador = Math.min(totalImponible, indicadores.tope_afp)
+
+    sis = Math.round(baseAfpEmpleador * indicadores.tasas.sis)
+    isl = Math.round(baseCotizEmpleador * indicadores.tasas.isl)
+    indemnizacion = Math.round(baseCotizEmpleador * indicadores.tasas.indemnizacion)
+    cesantiaEmpleador = Math.round(baseCotizEmpleador * indicadores.tasas.cesantia_tcp)
+
+    // Reforma previsional — pensionados exentos
+    afpEmpleador = esPensionado
+      ? 0
+      : Math.round(baseAfpEmpleador * tasasReforma.cap_individual_afp)
+    expectativaVida = esPensionado
+      ? 0
+      : Math.round(baseAfpEmpleador * tasasReforma.expectativa_vida)
+    rentabilidadProtegida = esPensionado
+      ? 0
+      : Math.round(baseAfpEmpleador * tasasReforma.rentabilidad_protegida)
+    leySanna = Math.round(baseAfpEmpleador * tasasReforma.ley_sanna)
+  }
 
   const totalCotizaciones =
     sis + isl + indemnizacion + cesantiaEmpleador +
-    afpEmpleador + expectativaVida + rentabilidadProtegida
+    afpEmpleador + expectativaVida + rentabilidadProtegida + leySanna
 
   // ── Costos empleador ──
   const costoTotal = totalImponible + totalCotizaciones
@@ -282,6 +404,7 @@ export function calcularLiquidacion(
       afp_empleador: afpEmpleador,
       expectativa_vida: expectativaVida,
       rentabilidad_protegida: rentabilidadProtegida,
+      ley_sanna: leySanna,
       total_cotizaciones: totalCotizaciones,
     },
     totales: {

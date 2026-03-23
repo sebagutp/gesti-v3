@@ -18,7 +18,9 @@ import {
   RECORDATORIO_MENSUAL_TEMPLATE,
 } from './templates';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 const FROM_EMAIL = 'Gesti <noreply@gesti.cl>';
 const PORTAL_URL = process.env.NEXT_PUBLIC_URL || 'https://app.gesti.cl';
@@ -65,7 +67,7 @@ export async function enviarEmailContrato(
   const pdfResponse = await fetch(pdfUrl);
   const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
 
-  return resend.emails.send({
+  return getResend().emails.send({
     from: FROM_EMAIL,
     to: [contrato.email_trabajador, contrato.email_empleador],
     subject: `Contrato creado: ${contrato.razon_social}`,
@@ -122,7 +124,7 @@ export async function enviarEmailLiquidacion(
   const pdfLiqBuffer = Buffer.from(await pdfLiqResponse.arrayBuffer());
   const pdfResumenBuffer = Buffer.from(await pdfResumenResponse.arrayBuffer());
 
-  return resend.emails.send({
+  return getResend().emails.send({
     from: FROM_EMAIL,
     to: [liquidacion.email_trabajador, liquidacion.email_empleador],
     subject: `Liquidación ${liquidacion.periodo}: ${liquidacion.nombre_trabajador}`,
@@ -173,7 +175,7 @@ export async function enviarRecordatorioMensual(
     url_portal: PORTAL_URL,
   });
 
-  return resend.emails.send({
+  return getResend().emails.send({
     from: FROM_EMAIL,
     to: [email],
     subject: `Recordatorio: Genera las liquidaciones de ${mesActual}`,
