@@ -1,14 +1,38 @@
+'use client'
+
+import { useState } from 'react'
+import { Sidebar } from '@/components/dashboard/Sidebar'
+import { Header } from '@/components/dashboard/Header'
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   return (
     <div className="flex min-h-screen">
-      <aside className="w-[150px] bg-gesti-teal text-white hidden md:block">
-        {/* TODO: Sidebar */}
+      {/* Desktop Sidebar */}
+      <aside className="w-[150px] hidden md:block flex-shrink-0">
+        <div className="fixed w-[150px] h-full">
+          <Sidebar />
+        </div>
       </aside>
-      <main className="flex-1">
-        <header className="h-16 border-b flex items-center px-6">
-          {/* TODO: Header */}
-        </header>
-        <div className="p-6">{children}</div>
+
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setSidebarOpen(false)}
+          />
+          <aside className="relative w-[200px] h-full">
+            <Sidebar onClose={() => setSidebarOpen(false)} />
+          </aside>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col min-w-0">
+        <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
+        <div className="p-6 flex-1">{children}</div>
       </main>
     </div>
   )
