@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Bell, Info, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
+import { createBrowserClient } from '@/lib/supabase/client'
 
 interface Notificacion {
   id: string
@@ -48,6 +49,45 @@ export function NotificationBell() {
       }
     }
     fetchNotifications()
+  }, [])
+
+  // Supabase Realtime subscription for new notifications
+  useEffect(() => {
+    const supabase = createBrowserClient()
+    let userId: string | null = null
+
+    async function subscribe() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      userId = user.id
+
+      const channel = supabase
+        .channel('notificaciones-realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notificaciones',
+            filter: `user_id=eq.${userId}`,
+          },
+          (payload) => {
+            const newNotif = payload.new as Notificacion
+            setNotificaciones((prev) => [newNotif, ...prev].slice(0, 20))
+          }
+        )
+        .subscribe()
+
+      return channel
+    }
+
+    const channelPromise = subscribe()
+
+    return () => {
+      channelPromise.then((channel) => {
+        if (channel) supabase.removeChannel(channel)
+      })
+    }
   }, [])
 
   // Close on click outside

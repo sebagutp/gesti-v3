@@ -173,6 +173,19 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       })
       .eq('id', id)
 
+    // ── Insertar notificación ──
+    try {
+      await supabase.from('notificaciones').insert({
+        user_id: user.id,
+        tipo: 'success',
+        titulo: 'Liquidación generada',
+        mensaje: `Liquidación de ${contrato.nombre_trabajador} ${contrato.apellidos_trabajador} — ${periodoFormateado} generada exitosamente.`,
+        leida: false,
+      })
+    } catch {
+      // non-blocking
+    }
+
     return Response.json({
       success: true,
       data: {

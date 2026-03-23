@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { SimuladorLiquidacion } from '@/components/simulador/SimuladorLiquidacion'
 import { ResultadoLiquidacion } from '@/components/simulador/ResultadoLiquidacion'
 import type { InputLiquidacion, ResultadoLiquidacion as ResultadoType } from '@/lib/types/liquidacion'
+import { trackEvent } from '@/lib/analytics'
 
 type View = 'form' | 'result' | 'error'
 
@@ -32,6 +33,11 @@ export default function SimuladorPage() {
 
       setResultado(data.data)
       setView('result')
+      trackEvent('Contrato_simulado', {
+        sueldo_base: input.sueldo_base,
+        tipo_sueldo: input.tipo_sueldo,
+        afp: input.afp,
+      })
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Error inesperado')
       setView('error')
