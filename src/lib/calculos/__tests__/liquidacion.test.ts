@@ -403,3 +403,360 @@ describe('Reforma en motor — cotizaciones empleador', () => {
     expect(resultado.cotizaciones_empleador.rentabilidad_protegida).toBeGreaterThan(0)
   })
 })
+
+// ============================================================
+// HU-24: Tests unitarios motor v3.1 — Casos borde
+// ============================================================
+
+// ── APV Régimen A: NO reduce RLI ──
+describe('APV Régimen A — no afecta IUSC', () => {
+  const sinAPV = calcularLiquidacion(inputBase(1_200_000, 'bruto'))
+  const conAPV_A: InputLiquidacion = {
+    ...inputBase(1_200_000, 'bruto'),
+    apv_monto: 50_000,
+    apv_regimen: 'A',
+  }
+  const resultAPV_A = calcularLiquidacion(conAPV_A)
+
+  it('RLI igual con y sin APV Régimen A', () => {
+    expect(resultAPV_A.meta.rli_calculado).toBe(sinAPV.meta.rli_calculado)
+  })
+
+  it('IUSC igual con y sin APV Régimen A', () => {
+    expect(resultAPV_A.descuentos_trabajador.iusc).toBe(sinAPV.descuentos_trabajador.iusc)
+  })
+
+  it('APV descuento aplicado', () => {
+    expect(resultAPV_A.descuentos_trabajador.apv).toBe(50_000)
+  })
+
+  it('Líquido menor por APV descuento', () => {
+    expect(resultAPV_A.totales.liquido).toBe(sinAPV.totales.liquido - 50_000)
+  })
+})
+
+// ── APV Régimen B: SÍ reduce RLI ──
+describe('APV Régimen B — reduce RLI y IUSC', () => {
+  const sinAPV = calcularLiquidacion(inputBase(1_200_000, 'bruto'))
+  const conAPV_B: InputLiquidacion = {
+    ...inputBase(1_200_000, 'bruto'),
+    apv_monto: 100_000,
+    apv_regimen: 'B',
+  }
+  const resultAPV_B = calcularLiquidacion(conAPV_B)
+
+  it('RLI menor con APV Régimen B', () => {
+    expect(resultAPV_B.meta.rli_calculado).toBe(
+      sinAPV.meta.rli_calculado - 100_000
+    )
+  })
+
+  it('IUSC menor o igual con APV Régimen B', () => {
+    expect(resultAPV_B.descuentos_trabajador.iusc).toBeLessThanOrEqual(
+      sinAPV.descuentos_trabajador.iusc
+    )
+  })
+
+  it('APV descuento aplicado', () => {
+    expect(resultAPV_B.descuentos_trabajador.apv).toBe(100_000)
+  })
+})
+
+// ── APV Régimen B: tope 50 UF ──
+describe('APV Régimen B — tope 50 UF', () => {
+  const tope50UF = Math.round(50 * IND.uf) // ~$1.992.086
+  const conAPV_exceso: InputLiquidacion = {
+    ...inputBase(3_000_000, 'bruto'),
+    apv_monto: 2_500_000, // mayor a 50 UF
+    apv_regimen: 'B',
+  }
+  const resultado = calcularLiquidacion(conAPV_exceso)
+
+  it('APV descuento = tope 50 UF, no el monto solicitado', () => {
+    expect(resultado.descuentos_trabajador.apv).toBe(tope50UF)
+  })
+})
+
+// ── Sueldo mínimo TCP (bruto $539.000) ──
+describe('Sueldo mínimo TCP — $539.000 bruto', () => {
+  const resultado = calcularLiquidacion(inputBase(539_000, 'bruto'))
+
+  it('bruto = $539.000', () => {
+    expect(resultado.totales.bruto).toBe(539_000)
+  })
+
+  it('exento IUSC (RLI < $943.501)', () => {
+    expect(resultado.descuentos_trabajador.iusc).toBe(0)
+  })
+
+  it('cesantía trabajador = $0', () => {
+    expect(resultado.descuentos_trabajador.cesantia).toBe(0)
+  })
+
+  it('líquido positivo', () => {
+    expect(resultado.totales.liquido).toBeGreaterThan(0)
+  })
+})
+
+// ── Bisección con tope AFP ──
+describe('Bisección — sueldo alto cerca del tope AFP', () => {
+  // Tope AFP 90 UF = $3.585.755
+  const resultado = calcularLiquidacion(inputBase(3_000_000))
+
+  it('bruto > $3M (resolución bisección)', () => {
+    expect(resultado.totales.bruto).toBeGreaterThan(3_000_000)
+  })
+
+  it('AFP no puede exceder tope × tasa', () => {
+    const maxAfp = Math.round(IND.tope_afp * 0.1046)
+    expect(resultado.descuentos_trabajador.afp).toBeLessThanOrEqual(maxAfp)
+  })
+
+  it('bisección converge: bruto - AFP - salud = pactado', () => {
+    const { bruto } = resultado.totales
+    const { afp, salud } = resultado.descuentos_trabajador
+    expect(bruto - afp - salud).toBe(3_000_000)
+  })
+})
+
+// ── IUSC tramos altos ──
+describe('IUSC — tramos 3 a 7', () => {
+  const tramos = IND.tramos_iusc
+
+  it('tramo 3: RLI $3M → IUSC $118.393', () => {
+    // 3.000.000 * 0.08 - 121.607 = 118.393
+    expect(calcularIUSC(3_000_000, tramos)).toBe(118_393)
+  })
+
+  it('tramo 4: RLI $4M → IUSC $159.480', () => {
+    // 4.000.000 * 0.135 - 380.520 = 159.480
+    expect(calcularIUSC(4_000_000, tramos)).toBe(159_480)
+  })
+
+  it('tramo 5: RLI $6M → IUSC $273.030', () => {
+    // 6.000.000 * 0.23 - 1.106.970 = 273.030
+    expect(calcularIUSC(6_000_000, tramos)).toBe(273_030)
+  })
+
+  it('tramo 6: RLI $8M → IUSC $662.660', () => {
+    // 8.000.000 * 0.304 - 1.769.340 = 662.660
+    expect(calcularIUSC(8_000_000, tramos)).toBe(662_660)
+  })
+
+  it('tramo 7: RLI $10M → IUSC $1.015.540', () => {
+    // 10.000.000 * 0.37 - 2.684.460 = 1.015.540
+    expect(calcularIUSC(10_000_000, tramos)).toBe(1_015_540)
+  })
+
+  it('tramo 7: RLI $15M → IUSC $2.865.540', () => {
+    // 15.000.000 * 0.37 - 2.684.460 = 2.865.540
+    expect(calcularIUSC(15_000_000, tramos)).toBe(2_865_540)
+  })
+})
+
+// ── Horas extra ──
+describe('Horas extra — recargo 50%', () => {
+  const conHE: InputLiquidacion = {
+    ...inputBase(600_000, 'bruto'),
+    horas_extra: 10,
+  }
+  const resultado = calcularLiquidacion(conHE)
+  const sinHE = calcularLiquidacion(inputBase(600_000, 'bruto'))
+
+  it('horas extra calculadas correctamente', () => {
+    // valorHora = 600000 / 30 / 8 = 2500
+    // HE = 10 * 2500 * 1.5 = 37500
+    expect(resultado.haberes.horas_extra).toBe(37_500)
+  })
+
+  it('bruto mayor con horas extra', () => {
+    expect(resultado.totales.bruto).toBe(sinHE.totales.bruto + 37_500)
+  })
+})
+
+// ── Cargas familiares ──
+describe('Asignación familiar — cargas', () => {
+  it('1 carga: UF × 0.25', () => {
+    const input: InputLiquidacion = {
+      ...inputBase(600_000, 'bruto'),
+      cargas_familiares: 1,
+    }
+    const resultado = calcularLiquidacion(input)
+    expect(resultado.haberes.asignacion_familiar).toBe(Math.round(1 * IND.uf * 0.25))
+  })
+
+  it('3 cargas: 3 × UF × 0.20', () => {
+    const input: InputLiquidacion = {
+      ...inputBase(600_000, 'bruto'),
+      cargas_familiares: 3,
+    }
+    const resultado = calcularLiquidacion(input)
+    expect(resultado.haberes.asignacion_familiar).toBe(Math.round(3 * IND.uf * 0.20))
+  })
+
+  it('5 cargas: 5 × UF × 0.15', () => {
+    const input: InputLiquidacion = {
+      ...inputBase(600_000, 'bruto'),
+      cargas_familiares: 5,
+    }
+    const resultado = calcularLiquidacion(input)
+    expect(resultado.haberes.asignacion_familiar).toBe(Math.round(5 * IND.uf * 0.15))
+  })
+
+  it('8 cargas: 8 × UF × 0.10', () => {
+    const input: InputLiquidacion = {
+      ...inputBase(600_000, 'bruto'),
+      cargas_familiares: 8,
+    }
+    const resultado = calcularLiquidacion(input)
+    expect(resultado.haberes.asignacion_familiar).toBe(Math.round(8 * IND.uf * 0.10))
+  })
+
+  it('0 cargas: $0', () => {
+    const resultado = calcularLiquidacion(inputBase(600_000, 'bruto'))
+    expect(resultado.haberes.asignacion_familiar).toBe(0)
+  })
+})
+
+// ── Días parciales sin licencia ──
+describe('Días parciales (sin licencia) — prorrateo simple', () => {
+  const input20dias: InputLiquidacion = {
+    ...inputBase(600_000, 'bruto'),
+    dias_trabajados: 20,
+  }
+  const resultado = calcularLiquidacion(input20dias)
+
+  it('sueldo base = bruto × 20/30', () => {
+    expect(resultado.haberes.sueldo_base).toBe(Math.round(600_000 * 20 / 30))
+  })
+
+  it('bruto = sueldo ajustado', () => {
+    expect(resultado.totales.bruto).toBe(Math.round(600_000 * 20 / 30))
+  })
+})
+
+// ── Validaciones ──
+describe('Validaciones del motor', () => {
+  it('AFP inexistente → error', () => {
+    const input: InputLiquidacion = {
+      ...inputBase(600_000, 'bruto'),
+      afp: 'Inexistente',
+    }
+    const resultado = calcularLiquidacion(input)
+    expect(resultado.meta.errores).toBeDefined()
+    expect(resultado.meta.errores!.some(e => e.includes('AFP'))).toBe(true)
+  })
+
+  it('dias_trabajados > 30 → error', () => {
+    const input: InputLiquidacion = {
+      ...inputBase(600_000, 'bruto'),
+      dias_trabajados: 31,
+    }
+    const resultado = calcularLiquidacion(input)
+    expect(resultado.meta.errores).toBeDefined()
+    expect(resultado.meta.errores!.some(e => e.includes('dias_trabajados'))).toBe(true)
+  })
+
+  it('licencia parcial sin RIMA → error', () => {
+    const input: InputLiquidacion = {
+      ...inputBase(600_000, 'bruto'),
+      dias_trabajados: 20,
+      dias_licencia_medica: 10,
+      // rima omitido
+    }
+    const resultado = calcularLiquidacion(input)
+    expect(resultado.meta.errores).toBeDefined()
+    expect(resultado.meta.errores!.some(e => e.includes('RIMA'))).toBe(true)
+  })
+
+  it('APV sin régimen → error', () => {
+    const input: InputLiquidacion = {
+      ...inputBase(600_000, 'bruto'),
+      apv_monto: 50_000,
+      // apv_regimen omitido
+    }
+    const resultado = calcularLiquidacion(input)
+    expect(resultado.meta.errores).toBeDefined()
+    expect(resultado.meta.errores!.some(e => e.includes('apv_regimen'))).toBe(true)
+  })
+
+  it('dias_trabajados + dias_licencia > 30 → error', () => {
+    const input: InputLiquidacion = {
+      ...inputBase(600_000, 'bruto'),
+      dias_trabajados: 20,
+      dias_licencia_medica: 15,
+      rima: 500_000,
+    }
+    const resultado = calcularLiquidacion(input)
+    expect(resultado.meta.errores).toBeDefined()
+    expect(resultado.meta.errores!.some(e => e.includes('superar 30'))).toBe(true)
+  })
+})
+
+// ── Metadatos ──
+describe('Metadatos — auditoría', () => {
+  const resultado = calcularLiquidacion(inputBase(600_000, 'bruto'))
+
+  it('motor_version = v3.1', () => {
+    expect(resultado.meta.motor_version).toBe('v3.1')
+  })
+
+  it('periodo = indicadores.mes', () => {
+    expect(resultado.meta.periodo).toBe('2026-03')
+  })
+
+  it('indicadores_usados contiene UF, UTM, sueldo_minimo', () => {
+    expect(resultado.meta.indicadores_usados.uf).toBe(39841.72)
+    expect(resultado.meta.indicadores_usados.utm).toBe(69889)
+    expect(resultado.meta.indicadores_usados.sueldo_minimo_tcp).toBe(539000)
+  })
+
+  it('rli_calculado presente', () => {
+    expect(resultado.meta.rli_calculado).toBeGreaterThan(0)
+  })
+
+  it('sin errores en input válido', () => {
+    expect(resultado.meta.errores).toBeUndefined()
+  })
+})
+
+// ── Integridad numérica ──
+describe('Integridad numérica — haberes - descuentos = líquido', () => {
+  const casos = [
+    inputBase(500_000),
+    inputBase(1_000_000),
+    inputBase(2_000_000),
+    inputBase(539_000, 'bruto'),
+    inputBase(3_000_000, 'bruto'),
+  ]
+
+  casos.forEach((input, idx) => {
+    it(`caso ${idx + 1}: total_haberes - total_descuentos = liquido`, () => {
+      const r = calcularLiquidacion(input)
+      expect(r.haberes.total_haberes - r.descuentos_trabajador.total_descuentos).toBe(
+        r.totales.liquido
+      )
+    })
+  })
+})
+
+// ── Diferentes AFPs ──
+describe('Diferentes AFPs — tasas correctas', () => {
+  const afps = ['Capital', 'Cuprum', 'Habitat', 'PlanVital', 'Provida', 'Modelo', 'Uno']
+
+  afps.forEach(afp => {
+    it(`${afp}: AFP calculada con tasa correcta`, () => {
+      const input: InputLiquidacion = {
+        sueldo_base: 600_000,
+        tipo_sueldo: 'bruto',
+        afp,
+        es_pensionado: false,
+        dias_trabajados: 30,
+      }
+      const resultado = calcularLiquidacion(input)
+      const tasaEsperada = IND.afp_tasas[afp].tasa_obligatoria
+      const afpEsperado = Math.round(600_000 * tasaEsperada)
+      expect(resultado.descuentos_trabajador.afp).toBe(afpEsperado)
+    })
+  })
+})
