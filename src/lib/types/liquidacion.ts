@@ -132,3 +132,18 @@ export interface TasaAFP {
   tasa_obligatoria: number
   tasa_seguro: number
 }
+
+/** Registro de liquidación almacenado en Supabase */
+export interface Liquidacion {
+  id: string
+  contrato_id: string
+  user_id: string
+  periodo: string
+  input: InputLiquidacion
+  resultado: ResultadoLiquidacion
+  estado: 'borrador' | 'emitida' | 'enviada' | 'pagada'
+  pdf_url?: string
+  motor_version: string
+  created_at: string
+  updated_at: string
+}

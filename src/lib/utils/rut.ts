@@ -8,7 +8,7 @@
 function calcularDV(cuerpo: number): string {
   let suma = 0
   let multiplo = 2
-  let str = String(cuerpo)
+  const str = String(cuerpo)
 
   for (let i = str.length - 1; i >= 0; i--) {
     suma += parseInt(str[i], 10) * multiplo

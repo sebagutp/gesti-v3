@@ -166,7 +166,6 @@ export function calcularLiquidacion(
 
   // ── Paso 3: Ajustar por días trabajados y horas extra ──
   const diasTrabajados = input.dias_trabajados
-  const diasLicencia = input.dias_licencia_medica ?? 0
   const factorDias = diasTrabajados / 30
 
   const sueldoBaseAjustado = Math.round(brutoMensual * factorDias)

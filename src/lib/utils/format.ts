@@ -19,3 +19,23 @@ export function formatCLP(monto: number): string {
 export function formatPercent(valor: number, decimales: number = 2): string {
   return (valor * 100).toFixed(decimales).replace('.', ',') + '%'
 }
+
+/**
+ * Formatea una fecha ISO a formato chileno dd/mm/yyyy
+ */
+export function formatDate(fecha: string): string {
+  const d = new Date(fecha)
+  return d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+/**
+ * Formatea un periodo YYYY-MM a "Marzo 2026"
+ */
+export function formatPeriodo(periodo: string): string {
+  const [year, month] = periodo.split('-')
+  const meses = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ]
+  return `${meses[parseInt(month, 10) - 1]} ${year}`
+}

@@ -54,4 +54,4 @@ export interface Contrato {
   updated_at: string
 }
 
-export interface ContratoInput extends Omit<Contrato, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'estado' | 'pdf_url' | 'token'> {}
+export type ContratoInput = Omit<Contrato, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'estado' | 'pdf_url' | 'token'>
