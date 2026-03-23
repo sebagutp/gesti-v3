@@ -53,3 +53,27 @@ export async function generarResumenPagosPDF(
 
   return url;
 }
+
+/**
+ * Genera el PDF de cartola anual de pagos y lo sube a Supabase Storage.
+ *
+ * @param contratoId - ID del contrato
+ * @param anio - Año de la cartola (ej: "2026")
+ * @param variables - Variables para la plantilla (incluye array de liquidaciones)
+ * @returns URL pública del PDF generado
+ */
+export async function generarCartolaAnualPDF(
+  contratoId: string,
+  anio: string,
+  variables: Record<string, unknown>
+): Promise<string> {
+  const templatePath = join(process.cwd(), 'src/templates/liquidaciones/cartola_anual.html');
+  const templateHtml = await readFile(templatePath, 'utf-8');
+
+  const html = renderTemplate(templateHtml, variables);
+  const pdfBuffer = await generatePDF(html);
+  const fileName = `cartolas/${contratoId}-${anio}.pdf`;
+  const url = await uploadToSupabase(pdfBuffer, fileName);
+
+  return url;
+}
