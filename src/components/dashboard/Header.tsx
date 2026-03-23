@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
+import { NotificationBell } from '@/components/shared/NotificationBell'
 
 export function Header({ onMenuToggle }: { onMenuToggle?: () => void }) {
   const router = useRouter()
@@ -44,6 +45,7 @@ export function Header({ onMenuToggle }: { onMenuToggle?: () => void }) {
       </div>
 
       <div className="flex items-center gap-4">
+        <NotificationBell />
         <span className="text-sm text-gray-600 hidden sm:block">{displayName}</span>
         <button
           onClick={handleLogout}
