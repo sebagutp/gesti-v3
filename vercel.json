@@ -1,12 +1,51 @@
 {
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "regions": ["gru1"],
+  "functions": {
+    "src/app/api/contratos/[id]/generar-pdf/route.ts": {
+      "memory": 1024,
+      "maxDuration": 30
+    },
+    "src/app/api/liquidaciones/[id]/generar-pdf/route.ts": {
+      "memory": 1024,
+      "maxDuration": 30
+    },
+    "src/app/api/generar-pdf/route.ts": {
+      "memory": 1024,
+      "maxDuration": 30
+    },
+    "src/app/api/webhooks/whatsapp/route.ts": {
+      "maxDuration": 15
+    },
+    "src/app/api/cron/*/route.ts": {
+      "maxDuration": 60
+    }
+  },
   "crons": [
+    {
+      "path": "/api/cron/expire-plans",
+      "schedule": "0 6 * * *"
+    },
     {
       "path": "/api/cron/recordatorio-mensual",
       "schedule": "0 12 25 * *"
     },
     {
-      "path": "/api/cron/recordatorio-mensual",
-      "schedule": "0 12 28-31 * *"
+      "path": "/api/cron/update-indicadores",
+      "schedule": "0 8 1 * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
     }
   ]
 }
