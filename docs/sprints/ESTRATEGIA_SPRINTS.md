@@ -226,10 +226,10 @@
 
 | HU | Título | Criterio de aceptación |
 |----|--------|------------------------|
-| HU-310 | Integración Stripe | Checkout session → webhook → actualizar `user_billing`. |
-| HU-311 | checkPlanAccess real | Consulta `user_billing`. Free: solo simulación. Pro: todo habilitado. |
-| HU-312 | UI billing mejorada | Planes, precios, estado actual, botón upgrade, historial. |
-| HU-313 | Webhook Stripe | `/api/webhooks/stripe` — eventos: checkout.session.completed, subscription.updated/deleted. |
+| HU-310 | Billing avanzado | Historial de pagos, lógica upgrade/downgrade, endpoint transacciones. |
+| HU-311 | UI billing historial | Tabla transacciones en /facturacion con estados y montos. |
+
+> **NOTA:** La integración Transbank (checkout, callback, checkPlanAccess real) se movió a Sprint 2 Rama A (HU-204 a HU-209).
 
 ### Rama C — Notificaciones + PWA
 

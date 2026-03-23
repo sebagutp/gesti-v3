@@ -10,7 +10,7 @@ Contratos de trabajo, liquidaciones de sueldo, permisos, facturación, cumplimie
 - **DB:** Supabase (PostgreSQL + Auth + Storage + Realtime + Edge Functions)
 - **PDF:** puppeteer-core + @sparticuz/chromium (en API Routes, NO Edge Functions)
 - **Email:** Resend (transaccional)
-- **Pagos:** Stripe
+- **Pagos:** Transbank Webpay Plus (`transbank-sdk`)
 - **WhatsApp:** Meta Cloud API + Claude API (chatbot)
 
 ## Supabase
@@ -30,6 +30,7 @@ src/components/          → UI reutilizable (ver context/components.md)
 src/lib/calculos/        → Motor liquidación v3.1 (ver context/calculos.md)
 src/lib/supabase/        → Clients browser/server
 src/lib/auth/            → checkPlanAccess middleware
+src/lib/transbank/       → Client Webpay Plus (ver docs/MIGRACION_STRIPE_A_TRANSBANK.md)
 src/lib/pdf/             → Generación PDF (ver context/pdf.md)
 src/lib/email/           → Resend + templates
 src/lib/types/           → Tipos compartidos (ver context/types.md)
@@ -91,6 +92,16 @@ npx supabase db push # Aplicar migraciones
 4 ramas: rama-a (infra/auth/DB), rama-b (motor/API), rama-c (contratos/PDF), rama-d (front/UX)
 Tipos en `lib/types/` son propiedad de rama-b y son inmutables durante un sprint.
 Al cierre de sprint: merge A→B→C→D→main, actualizar `docs/context/api.md`.
+
+## Pagos — Transbank Webpay Plus
+- **SDK:** `transbank-sdk` (NO Stripe)
+- **Flujo:** checkout → redirect Webpay → callback → commit → activar plan
+- **Sin suscripciones automáticas** — renovación manual del usuario
+- **Sin billing portal** — UI propia en /facturacion
+- **DB:** `user_billing` con columnas `tbk_order_id` y `tbk_token` (no stripe_*)
+- **Tabla auxiliar:** `billing_transactions` para historial de pagos
+- **ENV:** `TBK_COMMERCE_CODE`, `TBK_API_KEY`, `TBK_ENVIRONMENT`
+- **Doc completa:** `docs/MIGRACION_STRIPE_A_TRANSBANK.md`
 
 ## Spec Completa
 `docs/GESTI_V3.1_ESPECIFICACION_DEFINITIVA.md` — Documento maestro con todo el detalle.

@@ -88,15 +88,24 @@ interface CalcRequest {
 
 ### GET /api/billing/plan
 ```typescript
-// Response: { plan_type, plan_status, start_date, end_date }
+// Response: { plan_type, plan_status, start_date, end_date, has_active_plan, days_remaining }
+```
+
+### POST /api/billing/checkout
+```typescript
+// Request: { plan: 'Pro_Mensual' | 'Pro_Anual' }
+// Crea transacción Webpay Plus, retorna URL de redirect
+// Response: { success: true, data: { url: string, token: string } }
+```
+
+### GET /api/billing/callback
+```typescript
+// Callback de Transbank tras pago. Recibe token_ws en query params.
+// Ejecuta commit(), actualiza user_billing y billing_transactions.
+// Redirect a /facturacion/success o /facturacion?status=error
 ```
 
 ## Webhooks
-
-### POST /api/webhooks/stripe
-```typescript
-// Stripe signature verification. Events: checkout.session.completed, subscription.*
-```
 
 ### POST /api/webhooks/whatsapp
 ```typescript

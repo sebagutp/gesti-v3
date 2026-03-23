@@ -41,8 +41,8 @@ CREATE TABLE user_billing (
   plan_status TEXT,  -- active|expired|cancelled
   start_date TIMESTAMP,
   end_date TIMESTAMP,
-  stripe_customer_id TEXT,
-  stripe_subscription_id TEXT,
+  tbk_order_id TEXT,       -- Último buy_order de Transbank
+  tbk_token TEXT,          -- Token última transacción Webpay exitosa
   created_at TIMESTAMP,
   updated_at TIMESTAMP
 )
