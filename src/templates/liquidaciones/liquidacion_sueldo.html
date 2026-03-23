@@ -1,1 +1,428 @@
-<!-- TODO: Plantilla liquidación -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      font-size: 10pt;
+      line-height: 1.5;
+      color: #2f2e40;
+      background: #fff;
+    }
+
+    .header {
+      background: #135e5f;
+      color: #fff;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header img { height: 45px; }
+
+    .header h1 {
+      font-size: 16pt;
+      font-weight: 700;
+    }
+
+    .header .periodo {
+      font-size: 14pt;
+      font-weight: 600;
+      background: #6fc8a0;
+      color: #2f2e40;
+      padding: 6px 16px;
+      border-radius: 6px;
+    }
+
+    .content { padding: 24px 32px; }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 20px;
+    }
+
+    .info-box {
+      flex: 1;
+      background: #f4f4f9;
+      border-radius: 6px;
+      padding: 12px 16px;
+    }
+
+    .info-box .label {
+      font-size: 8pt;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 500;
+    }
+
+    .info-box .value {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #2f2e40;
+      margin-top: 2px;
+    }
+
+    h2 {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #135e5f;
+      margin: 20px 0 8px 0;
+      border-bottom: 2px solid #6fc8a0;
+      padding-bottom: 3px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+    }
+
+    th {
+      background: #135e5f;
+      color: #fff;
+      padding: 7px 12px;
+      text-align: left;
+      font-weight: 500;
+      font-size: 9pt;
+    }
+
+    th.monto { text-align: right; }
+
+    td {
+      padding: 6px 12px;
+      border-bottom: 1px solid #eee;
+      font-size: 10pt;
+    }
+
+    td.monto {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    tr:nth-child(even) { background: #f9f9fb; }
+
+    .total-row td {
+      font-weight: 600;
+      border-top: 2px solid #135e5f;
+      border-bottom: none;
+      padding-top: 8px;
+    }
+
+    .total-row td.monto {
+      color: #135e5f;
+      font-size: 11pt;
+    }
+
+    /* Resumen final */
+    .resumen {
+      display: flex;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .resumen-box {
+      flex: 1;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .resumen-box .label {
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .resumen-box .valor {
+      font-size: 18pt;
+      font-weight: 700;
+    }
+
+    .resumen-bruto {
+      background: #f4f4f9;
+      border: 1px solid #ddd;
+    }
+    .resumen-bruto .label { color: #888; }
+    .resumen-bruto .valor { color: #2f2e40; }
+
+    .resumen-descuentos {
+      background: #fff5f5;
+      border: 1px solid #fcc;
+    }
+    .resumen-descuentos .label { color: #c44; }
+    .resumen-descuentos .valor { color: #c44; }
+
+    .resumen-liquido {
+      background: #e8f8f0;
+      border: 2px solid #6fc8a0;
+    }
+    .resumen-liquido .label { color: #135e5f; }
+    .resumen-liquido .valor { color: #135e5f; }
+
+    .cotizaciones-nota {
+      font-size: 8pt;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    .costo-total {
+      margin-top: 20px;
+      background: #ffde59;
+      border-radius: 8px;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .costo-total .label {
+      font-size: 10pt;
+      font-weight: 600;
+      color: #2f2e40;
+    }
+
+    .costo-total .valor {
+      font-size: 16pt;
+      font-weight: 700;
+      color: #2f2e40;
+    }
+
+    .footer {
+      text-align: center;
+      color: #999;
+      font-size: 8pt;
+      margin-top: 30px;
+      padding: 12px 32px;
+      border-top: 1px solid #eee;
+    }
+
+    .motor-version {
+      font-size: 7pt;
+      color: #bbb;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- HEADER                                          -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <header class="header">
+    <div class="header-left">
+      <img src="https://gesti.cl/lovable-uploads/77774409-5ea8-40b2-8d6a-27b5285709d5.png" alt="Gesti">
+      <h1>Liquidación de Sueldo</h1>
+    </div>
+    <div class="periodo">{{periodo}}</div>
+  </header>
+
+  <div class="content">
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- INFO TRABAJADOR / EMPLEADOR                     -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="info-row">
+      <div class="info-box">
+        <div class="label">Trabajador/a</div>
+        <div class="value">{{trabajador_nombre}}</div>
+      </div>
+      <div class="info-box">
+        <div class="label">Empleador</div>
+        <div class="value">{{razon_social}}</div>
+      </div>
+      {{#if rut_trabajador}}
+      <div class="info-box">
+        <div class="label">RUT</div>
+        <div class="value">{{rut_trabajador}}</div>
+      </div>
+      {{/if}}
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- HABERES                                         -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <h2>Haberes</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Concepto</th>
+          <th class="monto">Monto ($)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Sueldo base</td>
+          <td class="monto">{{sueldo_base}}</td>
+        </tr>
+        {{#if gratificacion}}
+        <tr>
+          <td>Gratificación legal</td>
+          <td class="monto">{{gratificacion}}</td>
+        </tr>
+        {{/if}}
+        {{#if colacion}}
+        <tr>
+          <td>Asignación de colación</td>
+          <td class="monto">{{colacion}}</td>
+        </tr>
+        {{/if}}
+        {{#if movilizacion}}
+        <tr>
+          <td>Asignación de movilización</td>
+          <td class="monto">{{movilizacion}}</td>
+        </tr>
+        {{/if}}
+        {{#if horas_extra}}
+        <tr>
+          <td>Horas extra</td>
+          <td class="monto">{{horas_extra}}</td>
+        </tr>
+        {{/if}}
+        {{#if asignacion_familiar}}
+        <tr>
+          <td>Asignación familiar</td>
+          <td class="monto">{{asignacion_familiar}}</td>
+        </tr>
+        {{/if}}
+        {{#if otros_bonos}}
+        <tr>
+          <td>Otros bonos</td>
+          <td class="monto">{{otros_bonos}}</td>
+        </tr>
+        {{/if}}
+        <tr class="total-row">
+          <td>Total Haberes</td>
+          <td class="monto">{{total_haberes}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- DESCUENTOS                                      -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <h2>Descuentos</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Concepto</th>
+          <th class="monto">Monto ($)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#if afp}}
+        <tr>
+          <td>AFP ({{afp_nombre}})</td>
+          <td class="monto">{{afp}}</td>
+        </tr>
+        {{/if}}
+        {{#if salud}}
+        <tr>
+          <td>Salud ({{salud_nombre}})</td>
+          <td class="monto">{{salud}}</td>
+        </tr>
+        {{/if}}
+        {{#if iusc}}
+        <tr>
+          <td>Impuesto Único (IUSC)</td>
+          <td class="monto">{{iusc}}</td>
+        </tr>
+        {{/if}}
+        {{#if apv}}
+        <tr>
+          <td>APV (Régimen {{apv_regimen}})</td>
+          <td class="monto">{{apv}}</td>
+        </tr>
+        {{/if}}
+        {{#if anticipo}}
+        <tr>
+          <td>Anticipo</td>
+          <td class="monto">{{anticipo}}</td>
+        </tr>
+        {{/if}}
+        <tr class="total-row">
+          <td>Total Descuentos</td>
+          <td class="monto">{{total_descuentos}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- RESUMEN                                         -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="resumen">
+      <div class="resumen-box resumen-bruto">
+        <div class="label">Total Haberes</div>
+        <div class="valor">{{total_haberes}}</div>
+      </div>
+      <div class="resumen-box resumen-descuentos">
+        <div class="label">Total Descuentos</div>
+        <div class="valor">{{total_descuentos}}</div>
+      </div>
+      <div class="resumen-box resumen-liquido">
+        <div class="label">Sueldo Líquido</div>
+        <div class="valor">{{liquido}}</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- COTIZACIONES EMPLEADOR                          -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <h2>Cotizaciones del Empleador</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Cotización</th>
+          <th class="monto">Tasa (%)</th>
+          <th class="monto">Monto ($)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each cotizaciones}}
+        <tr>
+          <td>{{nombre}}</td>
+          <td class="monto">{{tasa}}</td>
+          <td class="monto">{{monto}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    <p class="cotizaciones-nota">Incluye cotizaciones Ley 21.735 de Reforma Previsional según gradualidad vigente.</p>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- COSTO TOTAL EMPLEADOR                           -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="costo-total">
+      <div class="label">Costo Total Empleador</div>
+      <div class="valor">${{total_empleador}}</div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- FOOTER                                          -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <footer class="footer">
+    <p>Documento generado por Gesti V3.1 — gesti.cl</p>
+    <p>Esta liquidación de sueldo cumple con el Art. 54 del Código del Trabajo.</p>
+    <p class="motor-version">Motor de cálculo: {{motor_version}}</p>
+  </footer>
+
+</body>
+</html>
