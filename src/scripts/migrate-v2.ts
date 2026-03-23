@@ -285,7 +285,8 @@ async function main() {
     // Cache de contratos insertados: rut_trabajador → contrato_id
     const contratoCache = new Map<string, string>()
 
-    for (const [i, row] of rows.entries()) {
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i]
       const idx = i + 1
       const errors: string[] = []
 
@@ -367,7 +368,8 @@ async function main() {
     stats.liquidaciones.total = rows.length
     log('INFO', `Filas de liquidaciones encontradas: ${rows.length}`)
 
-    for (const [i, row] of rows.entries()) {
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i]
       const idx = i + 1
       const errors: string[] = []
 
