@@ -1,11 +1,12 @@
 // ============================================================
-// WhatsApp Message Handler — Gesti V3.1 (Rama D) — HU-330/331
+// WhatsApp Message Handler — Gesti V3.1 (Rama D) — HU-330/331/332
 // Parsea mensajes entrantes y despacha al flujo correspondiente
 // ============================================================
 
 import type { WAWebhookPayload, ParsedMessage } from './types'
 import { sendTextMessage, sendButtonMessage } from './client'
-import { SIMULATION_STEPS, sendStepPrompt, processStepResponse } from './simulation-flow'
+import { sendStepPrompt, processStepResponse } from './simulation-flow'
+import { generateLegalResponse } from './ai-chatbot'
 
 /** Parsear payload de Meta Cloud API y extraer mensajes */
 export function parseIncomingMessages(payload: WAWebhookPayload): ParsedMessage[] {
@@ -56,6 +57,7 @@ const conversations = new Map<string, {
   mode: 'menu' | 'simulacion' | 'consulta'
   currentStep: number
   data: Record<string, unknown>
+  chatHistory: Array<{ role: 'user' | 'assistant'; content: string }>
   updatedAt: number
 }>()
 
@@ -94,12 +96,12 @@ export async function handleMessage(parsed: ParsedMessage): Promise<void> {
   if (!conv) {
     // Check if this is a menu selection
     if (interactiveId === 'menu_simular' || lower === 'simular' || lower === '1') {
-      conversations.set(from, { mode: 'simulacion', currentStep: 0, data: {}, updatedAt: Date.now() })
+      conversations.set(from, { mode: 'simulacion', currentStep: 0, data: {}, chatHistory: [], updatedAt: Date.now() })
       await sendStepPrompt(from, 0, {})
       return
     }
     if (interactiveId === 'menu_consulta' || lower === 'consulta' || lower === '2') {
-      conversations.set(from, { mode: 'consulta', currentStep: 0, data: {}, updatedAt: Date.now() })
+      conversations.set(from, { mode: 'consulta', currentStep: 0, data: {}, chatHistory: [], updatedAt: Date.now() })
       await sendTextMessage(from, '🤖 *Modo consulta laboral*\n\nPregúntame sobre legislación laboral de Trabajadores de Casa Particular en Chile.\n\nEscribe *menu* para volver al menú.')
       return
     }
@@ -120,10 +122,17 @@ export async function handleMessage(parsed: ParsedMessage): Promise<void> {
     return
   }
 
-  // Active consultation flow (placeholder — HU-332 will implement Claude AI)
+  // Active consultation flow — Claude AI for TCP labor law
   if (conv.mode === 'consulta') {
     conv.updatedAt = Date.now()
-    await sendTextMessage(from, '🔧 El modo consulta IA estará disponible pronto. Escribe *menu* para volver.')
+    const response = await generateLegalResponse(text, conv.chatHistory)
+    conv.chatHistory.push({ role: 'user', content: text })
+    conv.chatHistory.push({ role: 'assistant', content: response })
+    // Keep history bounded
+    if (conv.chatHistory.length > 20) {
+      conv.chatHistory = conv.chatHistory.slice(-20)
+    }
+    await sendTextMessage(from, response)
     return
   }
 }
