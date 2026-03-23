@@ -11,8 +11,12 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
-  title: 'Gesti - Gestión Laboral TCP',
-  description: 'Plataforma para gestión laboral de Trabajadores de Casa Particular en Chile',
+  title: {
+    default: 'Gesti - Gestión Laboral TCP Chile',
+    template: '%s | Gesti',
+  },
+  description: 'Plataforma para gestión laboral de Trabajadores de Casa Particular en Chile. Contratos, liquidaciones de sueldo, permisos y cumplimiento legal.',
+  metadataBase: new URL('https://gesti.cl'),
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -22,6 +26,28 @@ export const metadata: Metadata = {
   icons: {
     icon: '/icons/icon-192x192.png',
     apple: '/icons/icon-192x192.png',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'es_CL',
+    url: 'https://gesti.cl',
+    siteName: 'Gesti',
+    title: 'Gesti - Gestión Laboral TCP Chile',
+    description: 'Contratos, liquidaciones de sueldo y cumplimiento legal para empleadores de Trabajadores de Casa Particular.',
+    images: [
+      {
+        url: 'https://gesti.cl/lovable-uploads/77774409-5ea8-40b2-8d6a-27b5285709d5.png',
+        width: 512,
+        height: 512,
+        alt: 'Gesti - Plataforma de gestión laboral TCP',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Gesti - Gestión Laboral TCP Chile',
+    description: 'Contratos, liquidaciones de sueldo y cumplimiento legal para empleadores de Trabajadores de Casa Particular.',
+    images: ['https://gesti.cl/lovable-uploads/77774409-5ea8-40b2-8d6a-27b5285709d5.png'],
   },
 }
 
