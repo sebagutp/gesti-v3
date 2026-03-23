@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-export default function FacturacionSuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams()
   const sessionId = searchParams.get('session_id')
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
@@ -61,5 +61,13 @@ export default function FacturacionSuccessPage() {
         </Link>
       </div>
     </div>
+  )
+}
+
+export default function FacturacionSuccessPage() {
+  return (
+    <Suspense fallback={<div className="max-w-md mx-auto text-center py-16"><p className="text-gray-500">Cargando...</p></div>}>
+      <SuccessContent />
+    </Suspense>
   )
 }
