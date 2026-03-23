@@ -1,1 +1,378 @@
-<!-- TODO: Plantilla resumen -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      font-size: 10pt;
+      line-height: 1.5;
+      color: #2f2e40;
+      background: #fff;
+    }
+
+    .header {
+      background: #135e5f;
+      color: #fff;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header img { height: 45px; }
+
+    .header h1 {
+      font-size: 16pt;
+      font-weight: 700;
+    }
+
+    .header .periodo {
+      font-size: 14pt;
+      font-weight: 600;
+      background: #ffde59;
+      color: #2f2e40;
+      padding: 6px 16px;
+      border-radius: 6px;
+    }
+
+    .content { padding: 24px 32px; }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 20px;
+    }
+
+    .info-box {
+      flex: 1;
+      background: #f4f4f9;
+      border-radius: 6px;
+      padding: 12px 16px;
+    }
+
+    .info-box .label {
+      font-size: 8pt;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 500;
+    }
+
+    .info-box .value {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #2f2e40;
+      margin-top: 2px;
+    }
+
+    h2 {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #135e5f;
+      margin: 20px 0 8px 0;
+      border-bottom: 2px solid #6fc8a0;
+      padding-bottom: 3px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+    }
+
+    th {
+      background: #135e5f;
+      color: #fff;
+      padding: 7px 12px;
+      text-align: left;
+      font-weight: 500;
+      font-size: 9pt;
+    }
+
+    th.monto { text-align: right; }
+    th.tasa { text-align: center; }
+
+    td {
+      padding: 6px 12px;
+      border-bottom: 1px solid #eee;
+      font-size: 10pt;
+    }
+
+    td.monto {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    td.tasa { text-align: center; }
+
+    tr:nth-child(even) { background: #f9f9fb; }
+
+    .total-row td {
+      font-weight: 600;
+      border-top: 2px solid #135e5f;
+      border-bottom: none;
+      padding-top: 8px;
+    }
+
+    .total-row td.monto {
+      color: #135e5f;
+      font-size: 11pt;
+    }
+
+    .reforma-tag {
+      display: inline-block;
+      background: #ffde59;
+      color: #2f2e40;
+      font-size: 7pt;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 3px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* Resumen cards */
+    .resumen-cards {
+      display: flex;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .card {
+      flex: 1;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .card .label {
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .card .valor {
+      font-size: 16pt;
+      font-weight: 700;
+    }
+
+    .card-liquido {
+      background: #e8f8f0;
+      border: 1px solid #6fc8a0;
+    }
+    .card-liquido .label { color: #135e5f; }
+    .card-liquido .valor { color: #135e5f; }
+
+    .card-cotizaciones {
+      background: #fff8e1;
+      border: 1px solid #ffde59;
+    }
+    .card-cotizaciones .label { color: #8a7000; }
+    .card-cotizaciones .valor { color: #8a7000; }
+
+    .card-total {
+      background: #135e5f;
+      border: none;
+    }
+    .card-total .label { color: #6fc8a0; }
+    .card-total .valor { color: #fff; }
+
+    /* Detalle pago */
+    .detalle-pago {
+      margin-top: 24px;
+      background: #f4f4f9;
+      border-radius: 8px;
+      padding: 16px 20px;
+    }
+
+    .detalle-pago h3 {
+      font-size: 10pt;
+      font-weight: 600;
+      color: #135e5f;
+      margin-bottom: 10px;
+    }
+
+    .detalle-linea {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 10pt;
+    }
+
+    .detalle-linea.total {
+      border-top: 2px solid #135e5f;
+      margin-top: 8px;
+      padding-top: 8px;
+      font-weight: 700;
+      font-size: 12pt;
+      color: #135e5f;
+    }
+
+    .footer {
+      text-align: center;
+      color: #999;
+      font-size: 8pt;
+      margin-top: 30px;
+      padding: 12px 32px;
+      border-top: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- HEADER                                          -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <header class="header">
+    <div class="header-left">
+      <img src="https://gesti.cl/lovable-uploads/77774409-5ea8-40b2-8d6a-27b5285709d5.png" alt="Gesti">
+      <h1>Resumen de Pagos del Empleador</h1>
+    </div>
+    <div class="periodo">{{periodo}}</div>
+  </header>
+
+  <div class="content">
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- INFO                                            -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="info-row">
+      <div class="info-box">
+        <div class="label">Empleador</div>
+        <div class="value">{{razon_social}}</div>
+      </div>
+      <div class="info-box">
+        <div class="label">Trabajador/a</div>
+        <div class="value">{{trabajador_nombre}}</div>
+      </div>
+      <div class="info-box">
+        <div class="label">Sueldo Bruto</div>
+        <div class="value">${{bruto}}</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- COTIZACIONES OBLIGATORIAS                       -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <h2>Cotizaciones Obligatorias del Empleador</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Cotización</th>
+          <th class="tasa">Tasa (%)</th>
+          <th class="monto">Base Imponible ($)</th>
+          <th class="monto">Monto ($)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each cotizaciones_obligatorias}}
+        <tr>
+          <td>{{nombre}}</td>
+          <td class="tasa">{{tasa}}</td>
+          <td class="monto">{{base}}</td>
+          <td class="monto">{{monto}}</td>
+        </tr>
+        {{/each}}
+        <tr class="total-row">
+          <td colspan="3">Subtotal Cotizaciones Obligatorias</td>
+          <td class="monto">{{subtotal_obligatorias}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- COTIZACIONES REFORMA LEY 21.735                 -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <h2>Cotizaciones Reforma Previsional <span class="reforma-tag">LEY 21.735</span></h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Cotización</th>
+          <th class="tasa">Tasa (%)</th>
+          <th class="monto">Base Imponible ($)</th>
+          <th class="monto">Monto ($)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each cotizaciones_reforma}}
+        <tr>
+          <td>{{nombre}}</td>
+          <td class="tasa">{{tasa}}</td>
+          <td class="monto">{{base}}</td>
+          <td class="monto">{{monto}}</td>
+        </tr>
+        {{/each}}
+        <tr class="total-row">
+          <td colspan="3">Subtotal Reforma Previsional</td>
+          <td class="monto">{{subtotal_reforma}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- RESUMEN VISUAL                                  -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="resumen-cards">
+      <div class="card card-liquido">
+        <div class="label">Sueldo Líquido (al trabajador)</div>
+        <div class="valor">{{liquido}}</div>
+      </div>
+      <div class="card card-cotizaciones">
+        <div class="label">Total Cotizaciones Empleador</div>
+        <div class="valor">{{total_cotizaciones}}</div>
+      </div>
+      <div class="card card-total">
+        <div class="label">Costo Total Empleador</div>
+        <div class="valor">{{total_empleador}}</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- DETALLE DE PAGO                                 -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="detalle-pago">
+      <h3>Detalle del Desembolso Mensual</h3>
+      <div class="detalle-linea">
+        <span>Sueldo líquido al trabajador/a</span>
+        <span>${{liquido}}</span>
+      </div>
+      <div class="detalle-linea">
+        <span>Cotizaciones obligatorias</span>
+        <span>${{subtotal_obligatorias}}</span>
+      </div>
+      <div class="detalle-linea">
+        <span>Cotizaciones reforma previsional</span>
+        <span>${{subtotal_reforma}}</span>
+      </div>
+      <div class="detalle-linea total">
+        <span>Total a desembolsar</span>
+        <span>${{total_empleador}}</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- FOOTER                                          -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <footer class="footer">
+    <p>Documento generado por Gesti V3.1 — gesti.cl</p>
+    <p>Las cotizaciones de Reforma Previsional (Ley 21.735) se aplican según la gradualidad vigente al período indicado.</p>
+  </footer>
+
+</body>
+</html>

@@ -1,1 +1,467 @@
-<!-- TODO: Plantilla contrato TCP -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      font-size: 11pt;
+      line-height: 1.6;
+      color: #2f2e40;
+      background: #fff;
+    }
+
+    .header {
+      background: #135e5f;
+      color: #fff;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .header img { height: 50px; }
+
+    .header h1 {
+      font-size: 18pt;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .header .subtitulo {
+      font-size: 10pt;
+      font-weight: 400;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+
+    .content {
+      padding: 28px 32px;
+    }
+
+    h2 {
+      font-size: 12pt;
+      font-weight: 600;
+      color: #135e5f;
+      margin: 24px 0 10px 0;
+      border-bottom: 2px solid #6fc8a0;
+      padding-bottom: 4px;
+    }
+
+    h2:first-child { margin-top: 0; }
+
+    p {
+      margin-bottom: 8px;
+      text-align: justify;
+    }
+
+    .datos-tabla {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 16px 0;
+    }
+
+    .datos-tabla td {
+      padding: 5px 10px;
+      vertical-align: top;
+    }
+
+    .datos-tabla .label {
+      font-weight: 500;
+      color: #135e5f;
+      width: 200px;
+      white-space: nowrap;
+    }
+
+    .highlight {
+      background: #ffde59;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+
+    .horario-tabla {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 16px 0;
+      font-size: 10pt;
+    }
+
+    .horario-tabla th {
+      background: #135e5f;
+      color: #fff;
+      padding: 6px 10px;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    .horario-tabla td {
+      border: 1px solid #ddd;
+      padding: 5px 10px;
+      text-align: center;
+    }
+
+    .horario-tabla tr:nth-child(even) {
+      background: #f4f4f9;
+    }
+
+    .tareas-lista {
+      margin: 8px 0 16px 20px;
+      padding: 0;
+    }
+
+    .tareas-lista li {
+      margin-bottom: 4px;
+    }
+
+    .firmas {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 60px;
+      padding-top: 20px;
+    }
+
+    .firma-bloque {
+      text-align: center;
+      width: 42%;
+    }
+
+    .firma-linea {
+      border-top: 1px solid #2f2e40;
+      padding-top: 6px;
+      margin-top: 60px;
+      font-weight: 500;
+    }
+
+    .firma-detalle {
+      font-size: 9pt;
+      color: #666;
+    }
+
+    .footer {
+      text-align: center;
+      color: #999;
+      font-size: 8pt;
+      margin-top: 40px;
+      padding: 16px 32px;
+      border-top: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- HEADER                                          -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <header class="header">
+    <img src="https://gesti.cl/lovable-uploads/77774409-5ea8-40b2-8d6a-27b5285709d5.png" alt="Gesti">
+    <div>
+      <h1>Contrato de Trabajo</h1>
+      <div class="subtitulo">Trabajador/a de Casa Particular — {{#if puertas_adentro}}Puertas Adentro{{else}}Puertas Afuera{{/if}}</div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- PRIMERA: Individualización del Empleador        -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <h2>PRIMERA — Individualización del Empleador</h2>
+
+    <p>En <strong>{{comuna_empleador}}</strong>, a <strong>{{dia}}</strong> de <strong>{{mes}}</strong> de <strong>{{ano}}</strong>, entre:</p>
+
+    <table class="datos-tabla">
+      <tr>
+        <td class="label">Nombre completo:</td>
+        <td><strong>{{nombres_empleador}} {{apellidos_empleador}}</strong></td>
+      </tr>
+      <tr>
+        <td class="label">RUT:</td>
+        <td>{{rut_empleador}}</td>
+      </tr>
+      <tr>
+        <td class="label">Domicilio:</td>
+        <td>{{direccion_empleador}}, {{comuna_empleador}}</td>
+      </tr>
+      <tr>
+        <td class="label">Correo electrónico:</td>
+        <td>{{correo_empleador}}</td>
+      </tr>
+    </table>
+
+    <p>En adelante <strong>"el Empleador"</strong>, y por la otra parte:</p>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- SEGUNDA: Individualización del Trabajador       -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <h2>SEGUNDA — Individualización del/la Trabajador/a</h2>
+
+    <table class="datos-tabla">
+      <tr>
+        <td class="label">Nombre completo:</td>
+        <td><strong>{{nombres_trabajador}} {{apellidos_trabajador}}</strong></td>
+      </tr>
+      <tr>
+        {{#if doc_rut}}
+        <td class="label">Cédula de Identidad N°:</td>
+        <td>{{numero_documento}}</td>
+        {{/if}}
+        {{#if doc_pasaporte}}
+        <td class="label">N° de Pasaporte:</td>
+        <td>{{numero_documento}}</td>
+        {{/if}}
+      </tr>
+      <tr>
+        <td class="label">Nacionalidad:</td>
+        <td>{{nacionalidad}}</td>
+      </tr>
+      <tr>
+        <td class="label">Fecha de nacimiento:</td>
+        <td>{{nacimiento_trabajador}}</td>
+      </tr>
+      <tr>
+        <td class="label">Domicilio:</td>
+        <td>{{direccion_trabajador}}, {{comuna_trabajador}}</td>
+      </tr>
+      <tr>
+        <td class="label">Correo electrónico:</td>
+        <td>{{email_trabajador}}</td>
+      </tr>
+    </table>
+
+    <p>En adelante <strong>"el/la Trabajador/a"</strong>, ambas partes mayores de edad y libres en el consentimiento, convienen el siguiente contrato de trabajo para Trabajador/a de Casa Particular, de acuerdo con lo dispuesto en los artículos 146 y siguientes del Código del Trabajo:</p>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- TERCERO: Lugar de Trabajo y Condiciones         -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <h2>TERCERO — Lugar de Trabajo y Modalidad</h2>
+
+    {{#if puertas_adentro}}
+    <p>El/la Trabajador/a prestará sus servicios en el domicilio del Empleador ubicado en <strong>{{direccion_empleador}}, {{comuna_empleador}}</strong>, bajo la modalidad de <span class="highlight">Puertas Adentro</span>, conforme al artículo 146 del Código del Trabajo.</p>
+
+    <p>El Empleador se obliga a proporcionar al/la Trabajador/a <strong>alimentación adecuada y alojamiento</strong> en condiciones dignas e higiénicas, de acuerdo con lo establecido en el artículo 151 del Código del Trabajo. La habitación facilitada deberá contar con las condiciones mínimas de privacidad, ventilación y seguridad.</p>
+    {{/if}}
+
+    {{#if puertas_afuera}}
+    <p>El/la Trabajador/a prestará sus servicios en el domicilio del Empleador ubicado en <strong>{{direccion_empleador}}, {{comuna_empleador}}</strong>, bajo la modalidad de <span class="highlight">Puertas Afuera</span>, conforme al artículo 146 del Código del Trabajo.</p>
+    {{/if}}
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- CUARTO: Previsión y Ley 21.735                  -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <h2>CUARTO — Previsión Social y Reforma Previsional</h2>
+
+    <table class="datos-tabla">
+      <tr>
+        <td class="label">AFP:</td>
+        <td>{{afp_trabajador}}</td>
+      </tr>
+      <tr>
+        <td class="label">Salud:</td>
+        <td>{{salud_trabajador}}</td>
+      </tr>
+    </table>
+
+    <p>Las cotizaciones previsionales se regirán por la legislación vigente. El Empleador se obliga a enterar oportunamente las cotizaciones obligatorias, incluyendo las nuevas cotizaciones establecidas por la <strong>Ley 21.735 de Reforma Previsional</strong>:</p>
+
+    <table class="datos-tabla">
+      <tr>
+        <td class="label">Seguro de Invalidez y Sobrevivencia (SIS):</td>
+        <td>1,54%</td>
+      </tr>
+      <tr>
+        <td class="label">Indemnización a todo evento (Art. 163):</td>
+        <td>4,11%</td>
+      </tr>
+      <tr>
+        <td class="label">Seguro de Cesantía (empleador):</td>
+        <td>3,00%</td>
+      </tr>
+      <tr>
+        <td class="label">Capitalización Individual (Ley 21.735):</td>
+        <td>según gradualidad vigente</td>
+      </tr>
+      <tr>
+        <td class="label">Expectativa de Vida (Ley 21.735):</td>
+        <td>según gradualidad vigente</td>
+      </tr>
+    </table>
+
+    <p>El/la Trabajador/a queda exento/a del pago de cotización de cesantía, conforme a la normativa aplicable a Trabajadores de Casa Particular.</p>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- QUINTO: Jornada de Trabajo                      -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <h2>QUINTO — Jornada de Trabajo</h2>
+
+    {{#if puertas_adentro}}
+      {{#if jornada_full}}
+      <p>Dada la modalidad de Puertas Adentro, el/la Trabajador/a no estará sujeto/a a un horario fijo, pero tendrá derecho a un descanso absoluto mínimo de <strong>12 horas diarias</strong>, de las cuales 9 serán ininterrumpidas. Además, tendrá derecho a un día de descanso semanal, preferentemente en domingo, conforme al artículo 149 del Código del Trabajo.</p>
+
+      <p>Se contempla una <strong>bolsa de 15 horas adicionales mensuales</strong> para labores extraordinarias, las que serán compensadas conforme a la normativa vigente.</p>
+      {{/if}}
+
+      {{#if jornada_part}}
+      <p>Dada la modalidad de Puertas Adentro, el/la Trabajador/a cumplirá una <span class="highlight">jornada parcial de {{horas_semanales}} horas semanales</span>, distribuidas en {{dias_semana}} días. Tendrá derecho a un descanso absoluto mínimo de 12 horas diarias, de las cuales 9 serán ininterrumpidas.</p>
+      {{/if}}
+    {{/if}}
+
+    {{#if puertas_afuera}}
+      {{#if jornada_full}}
+      <p>El/la Trabajador/a cumplirá una <span class="highlight">jornada ordinaria de {{horas_semanales}} horas semanales</span>, distribuidas de lunes a sábado conforme al siguiente horario:</p>
+
+      <table class="horario-tabla">
+        <thead>
+          <tr>
+            <th>Día</th>
+            <th>Entrada</th>
+            <th>Salida</th>
+            <th>Colación</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each horarios}}
+          <tr>
+            <td>{{dia}}</td>
+            <td>{{entrada}}</td>
+            <td>{{salida}}</td>
+            <td>{{colacion}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+
+      <p>Se contempla una <strong>bolsa de 15 horas adicionales mensuales</strong> para labores extraordinarias, las que serán compensadas conforme a la normativa vigente.</p>
+      {{/if}}
+
+      {{#if jornada_part}}
+      <p>El/la Trabajador/a cumplirá una <span class="highlight">jornada parcial de {{horas_semanales}} horas semanales</span>, distribuidas en {{dias_semana}} días conforme al siguiente horario:</p>
+
+      <table class="horario-tabla">
+        <thead>
+          <tr>
+            <th>Día</th>
+            <th>Entrada</th>
+            <th>Salida</th>
+            <th>Colación</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each horarios}}
+          <tr>
+            <td>{{dia}}</td>
+            <td>{{entrada}}</td>
+            <td>{{salida}}</td>
+            <td>{{colacion}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{/if}}
+    {{/if}}
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- SEXTO: Funciones y Tareas                       -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <h2>SEXTO — Funciones y Tareas</h2>
+
+    <p>El/la Trabajador/a se compromete a realizar las siguientes labores:</p>
+
+    <p><strong>Tareas del hogar:</strong></p>
+    <p>{{tareas_contrato}}</p>
+
+    {{#if tareas2_contrato}}
+    <p><strong>Tareas exteriores:</strong></p>
+    <p>{{tareas2_contrato}}</p>
+    {{/if}}
+
+    {{#if adicionales_contrato}}
+    <p><strong>Tareas adicionales:</strong></p>
+    <p>{{adicionales_contrato}}</p>
+    {{/if}}
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- SÉPTIMO: Remuneración                           -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <h2>SÉPTIMO — Remuneración</h2>
+
+    <table class="datos-tabla">
+      <tr>
+        <td class="label">Sueldo base mensual:</td>
+        <td><strong>$<span class="highlight">{{sueldo_base}}</span></strong> ({{tipo_sueldo}})</td>
+      </tr>
+      {{#if asignacion_colacion}}
+      <tr>
+        <td class="label">Asignación de colación:</td>
+        <td>${{asignacion_colacion}}</td>
+      </tr>
+      {{/if}}
+      {{#if asignacion_movilizacion}}
+      <tr>
+        <td class="label">Asignación de movilización:</td>
+        <td>${{asignacion_movilizacion}}</td>
+      </tr>
+      {{/if}}
+    </table>
+
+    <p>La remuneración será pagada mensualmente, dentro de los primeros 5 días hábiles del mes siguiente al devengado, mediante transferencia electrónica u otro medio acordado por las partes.</p>
+
+    {{#if gratificacion}}
+    <p>El Empleador pagará gratificación legal conforme al artículo 50 del Código del Trabajo, equivalente al 25% de la remuneración mensual con tope de 4,75 Ingresos Mínimos Mensuales anuales.</p>
+    {{/if}}
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- OCTAVO: Vigencia del Contrato                   -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <h2>OCTAVO — Vigencia del Contrato</h2>
+
+    <p>El presente contrato comenzará a regir a partir del <strong>{{fecha_inicio}}</strong>{{#if con_termino}} y tendrá vigencia hasta el <strong>{{fecha_termino}}</strong>{{/if}}{{#if con_termino}}.{{else}}, con carácter de <strong>indefinido</strong>.{{/if}}</p>
+
+    <p>Cualquiera de las partes podrá poner término al contrato conforme a las causales establecidas en los artículos 159, 160 y 161 del Código del Trabajo. En caso de despido, el Empleador deberá dar aviso con al menos 30 días de anticipación.</p>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- NOVENO: Disposiciones Generales                 -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <h2>NOVENO — Disposiciones Generales</h2>
+
+    <p>El presente contrato se firma en dos ejemplares de igual tenor y fecha, quedando uno en poder de cada parte.</p>
+
+    <p>Todo lo no regulado expresamente en este contrato se regirá por las disposiciones del Código del Trabajo, en especial el Capítulo V del Título II del Libro I (artículos 146 a 152), y demás normativa laboral y previsional vigente.</p>
+
+    <p>Las partes declaran conocer y aceptar todas las cláusulas de este contrato y lo firman en señal de conformidad.</p>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- FIRMAS                                          -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="firmas">
+      <div class="firma-bloque">
+        <div class="firma-linea">{{nombres_empleador}} {{apellidos_empleador}}</div>
+        <div class="firma-detalle">RUT: {{rut_empleador}}</div>
+        <div class="firma-detalle">Empleador/a</div>
+      </div>
+      <div class="firma-bloque">
+        <div class="firma-linea">{{nombres_trabajador}} {{apellidos_trabajador}}</div>
+        <div class="firma-detalle">
+          {{#if doc_rut}}RUT: {{numero_documento}}{{/if}}
+          {{#if doc_pasaporte}}Pasaporte: {{numero_documento}}{{/if}}
+        </div>
+        <div class="firma-detalle">Trabajador/a</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- FOOTER                                          -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <footer class="footer">
+    <p>Documento generado por Gesti V3.1 — gesti.cl</p>
+    <p>Este contrato cumple con la legislación laboral chilena vigente y la Ley 21.735 de Reforma Previsional.</p>
+  </footer>
+
+</body>
+</html>
