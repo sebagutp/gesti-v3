@@ -1,1 +1,237 @@
-// TODO: Contract form steps definition
+import type { FormStep } from '@/lib/types/forms'
+
+/**
+ * Steps del formulario de contrato — 100% serializables.
+ * 4 secciones: Empleador, Trabajador, Jornada, Condiciones
+ */
+export const contractFormSteps: FormStep[] = [
+  // ───────── SECCIÓN 1: EMPLEADOR ─────────
+  {
+    id: 'razon_social',
+    type: 'text',
+    label: '¿Cuál es la razón social del empleador?',
+    placeholder: 'Ej: Juan Pérez López',
+    validation: { required: true, min: 3 },
+    section: 'Empleador',
+  },
+  {
+    id: 'rut_empresa',
+    type: 'rut',
+    label: '¿Cuál es el RUT del empleador?',
+    placeholder: '12.345.678-9',
+    validation: { required: true, pattern: '^\\d{1,2}\\.\\d{3}\\.\\d{3}-[\\dkK]$', patternMessage: 'Formato: 12.345.678-9' },
+    section: 'Empleador',
+  },
+  {
+    id: 'nombre_empleador',
+    type: 'text',
+    label: 'Nombre completo del empleador',
+    placeholder: 'Juan Antonio Pérez López',
+    validation: { required: true, min: 3 },
+    section: 'Empleador',
+  },
+  {
+    id: 'email_empleador',
+    type: 'email',
+    label: 'Email del empleador',
+    placeholder: 'juan@ejemplo.cl',
+    validation: { required: true },
+    section: 'Empleador',
+  },
+  {
+    id: 'telefono_empleador',
+    type: 'text',
+    label: 'Teléfono del empleador (opcional)',
+    placeholder: '+56 9 1234 5678',
+    validation: { required: false },
+    section: 'Empleador',
+  },
+  {
+    id: 'domicilio_empleador',
+    type: 'text',
+    label: 'Domicilio del empleador',
+    placeholder: 'Av. Providencia 1234, Santiago',
+    validation: { required: true, min: 5 },
+    section: 'Empleador',
+  },
+
+  // ───────── SECCIÓN 2: TRABAJADOR ─────────
+  {
+    id: 'nombre_trabajador',
+    type: 'text',
+    label: '¿Cuál es el nombre del trabajador/a?',
+    placeholder: 'María',
+    validation: { required: true, min: 2 },
+    section: 'Trabajador/a',
+  },
+  {
+    id: 'apellidos_trabajador',
+    type: 'text',
+    label: 'Apellidos del trabajador/a',
+    placeholder: 'González Muñoz',
+    validation: { required: true, min: 2 },
+    section: 'Trabajador/a',
+  },
+  {
+    id: 'tipo_documento',
+    type: 'radio',
+    label: 'Tipo de documento de identidad',
+    options: [
+      { value: 'rut', label: 'RUT chileno' },
+      { value: 'pasaporte', label: 'Pasaporte' },
+    ],
+    validation: { required: true },
+    section: 'Trabajador/a',
+  },
+  {
+    id: 'numero_documento_rut',
+    type: 'rut',
+    label: 'RUT del trabajador/a',
+    placeholder: '12.345.678-9',
+    validation: { required: true, pattern: '^\\d{1,2}\\.\\d{3}\\.\\d{3}-[\\dkK]$', patternMessage: 'Formato: 12.345.678-9' },
+    showIf: { field: 'tipo_documento', operator: 'equals', value: 'rut' },
+    section: 'Trabajador/a',
+  },
+  {
+    id: 'numero_documento_pasaporte',
+    type: 'text',
+    label: 'Número de pasaporte',
+    placeholder: 'AA1234567',
+    validation: { required: true, min: 5 },
+    showIf: { field: 'tipo_documento', operator: 'equals', value: 'pasaporte' },
+    section: 'Trabajador/a',
+  },
+  {
+    id: 'nacionalidad',
+    type: 'text',
+    label: 'Nacionalidad del trabajador/a',
+    placeholder: 'Chilena',
+    validation: { required: true, min: 3 },
+    section: 'Trabajador/a',
+  },
+  {
+    id: 'email_trabajador',
+    type: 'email',
+    label: 'Email del trabajador/a',
+    placeholder: 'maria@ejemplo.cl',
+    validation: { required: true },
+    section: 'Trabajador/a',
+  },
+  {
+    id: 'domicilio_trabajador',
+    type: 'text',
+    label: 'Domicilio del trabajador/a',
+    placeholder: 'Los Alerces 567, Puente Alto',
+    validation: { required: true, min: 5 },
+    section: 'Trabajador/a',
+  },
+
+  // ───────── SECCIÓN 3: JORNADA ─────────
+  {
+    id: 'tipo_contrato',
+    type: 'radio',
+    label: '¿Qué tipo de contrato será?',
+    options: [
+      { value: 'puertas_afuera', label: 'Puertas afuera — No vive en el domicilio del empleador' },
+      { value: 'puertas_adentro', label: 'Puertas adentro — Vive en el domicilio del empleador' },
+    ],
+    validation: { required: true },
+    section: 'Jornada',
+  },
+  {
+    id: 'tipo_jornada',
+    type: 'radio',
+    label: '¿Jornada completa o parcial?',
+    options: [
+      { value: 'full', label: 'Jornada completa — 45 horas semanales' },
+      { value: 'part', label: 'Jornada parcial — Menos de 45 horas semanales' },
+    ],
+    validation: { required: true },
+    section: 'Jornada',
+  },
+  {
+    id: 'sueldo_base',
+    type: 'number',
+    label: '¿Cuál es el sueldo pactado?',
+    placeholder: '539000',
+    helperText: 'Sueldo mínimo TCP 2026: $539.000',
+    validation: { required: true, min: 1 },
+    section: 'Jornada',
+  },
+  {
+    id: 'tipo_sueldo',
+    type: 'radio',
+    label: '¿El sueldo pactado es líquido o imponible?',
+    options: [
+      { value: 'liquido', label: 'Líquido — Lo que recibe el trabajador' },
+      { value: 'imponible', label: 'Imponible — Antes de descuentos' },
+    ],
+    validation: { required: true },
+    helperText: 'Si no estás seguro, elige "Líquido"',
+    section: 'Jornada',
+  },
+  {
+    id: 'afp',
+    type: 'select',
+    label: '¿En qué AFP está el trabajador/a?',
+    placeholder: 'Selecciona AFP...',
+    options: [
+      { value: 'Capital', label: 'Capital' },
+      { value: 'Cuprum', label: 'Cuprum' },
+      { value: 'Habitat', label: 'Habitat' },
+      { value: 'PlanVital', label: 'PlanVital' },
+      { value: 'Provida', label: 'Provida' },
+      { value: 'Modelo', label: 'Modelo' },
+      { value: 'Uno', label: 'Uno' },
+    ],
+    validation: { required: true },
+    section: 'Jornada',
+  },
+
+  // ───────── SECCIÓN 4: CONDICIONES ─────────
+  {
+    id: 'fecha_inicio',
+    type: 'date',
+    label: '¿Cuándo comienza el contrato?',
+    validation: { required: true },
+    section: 'Condiciones',
+  },
+  {
+    id: 'fecha_termino',
+    type: 'date',
+    label: 'Fecha de término (opcional)',
+    helperText: 'Déjalo vacío para contrato indefinido',
+    validation: { required: false },
+    section: 'Condiciones',
+  },
+  {
+    id: 'gratificacion',
+    type: 'radio',
+    label: '¿Se paga gratificación legal?',
+    options: [
+      { value: 'true', label: 'Sí — 25% del sueldo (tope 4,75 ingresos mínimos)' },
+      { value: 'false', label: 'No' },
+    ],
+    validation: { required: true },
+    helperText: 'La mayoría de los empleadores paga gratificación',
+    section: 'Condiciones',
+  },
+  {
+    id: 'colacion',
+    type: 'number',
+    label: 'Bono de colación mensual (CLP)',
+    placeholder: '0',
+    helperText: 'Monto no imponible para alimentación. Pon 0 si no aplica.',
+    validation: { required: true, min: 0 },
+    section: 'Condiciones',
+  },
+  {
+    id: 'movilizacion',
+    type: 'number',
+    label: 'Bono de movilización mensual (CLP)',
+    placeholder: '0',
+    helperText: 'Monto no imponible para transporte. Pon 0 si no aplica.',
+    validation: { required: true, min: 0 },
+    section: 'Condiciones',
+  },
+]
