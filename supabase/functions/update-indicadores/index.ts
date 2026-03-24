@@ -39,7 +39,6 @@ interface IndicadoresScraped {
     cap_individual_afp: number
     expectativa_vida: number
     rentabilidad_protegida: number
-    ley_sanna: number
   }
 }
 
@@ -505,7 +504,6 @@ Deno.serve(async (req: Request) => {
       cap_individual_afp: 0.001,
       expectativa_vida: 0.009,
       rentabilidad_protegida: 0,
-      ley_sanna: 0.003,
     },
     rli_exento_hasta: scraped.rli_exento_hasta!,
     updated_at: new Date().toISOString(),

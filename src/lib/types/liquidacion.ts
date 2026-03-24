@@ -53,7 +53,6 @@ export interface ResultadoLiquidacion {
     afp_empleador: number
     expectativa_vida: number
     rentabilidad_protegida: number
-    ley_sanna?: number
     total_cotizaciones: number
   }
 
@@ -112,7 +111,6 @@ export interface IndicadoresPrevisionales {
     cap_individual_afp: number
     expectativa_vida: number
     rentabilidad_protegida: number
-    ley_sanna: number
   }
 
   rli_exento_hasta: number

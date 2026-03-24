@@ -190,9 +190,6 @@ export default function LiquidacionDetailPage() {
           <Row label="AFP empleador (Reforma)" value={cotizaciones_empleador.afp_empleador} />
           <Row label="Expectativa de vida" value={cotizaciones_empleador.expectativa_vida} />
           <Row label="Rentabilidad protegida" value={cotizaciones_empleador.rentabilidad_protegida} />
-          {cotizaciones_empleador.ley_sanna != null && (
-            <Row label="Ley SANNA" value={cotizaciones_empleador.ley_sanna} />
-          )}
           <TotalRow label="Total Cotizaciones" value={cotizaciones_empleador.total_cotizaciones} />
         </div>
       </CollapsibleCard>

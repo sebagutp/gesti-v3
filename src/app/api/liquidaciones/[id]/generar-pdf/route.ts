@@ -142,7 +142,6 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       afp_empleador: resultado.cotizaciones_empleador.afp_empleador,
       expectativa_vida: resultado.cotizaciones_empleador.expectativa_vida,
       rentabilidad_protegida: resultado.cotizaciones_empleador.rentabilidad_protegida,
-      ley_sanna: resultado.cotizaciones_empleador.ley_sanna,
       total_cotizaciones: resultado.cotizaciones_empleador.total_cotizaciones,
 
       // Costos totales
@@ -153,7 +152,6 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       tiene_afp_empleador: resultado.cotizaciones_empleador.afp_empleador > 0,
       tiene_expectativa_vida: resultado.cotizaciones_empleador.expectativa_vida > 0,
       tiene_rentabilidad: resultado.cotizaciones_empleador.rentabilidad_protegida > 0,
-      tiene_sanna: (resultado.cotizaciones_empleador.ley_sanna ?? 0) > 0,
     }
 
     // ── Generar ambos PDFs ──

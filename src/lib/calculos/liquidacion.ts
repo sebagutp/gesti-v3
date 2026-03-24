@@ -55,7 +55,6 @@ export const INDICADORES_MARZO_2026: IndicadoresPrevisionales = {
     cap_individual_afp: 0.001,
     expectativa_vida: 0.009,
     rentabilidad_protegida: 0,
-    ley_sanna: 0.003,
   },
 
   rli_exento_hasta: 943501,
@@ -70,7 +69,6 @@ export function obtenerTasasReforma(periodo: string): {
   cap_individual_afp: number
   expectativa_vida: number
   rentabilidad_protegida: number
-  ley_sanna: number
 } {
   const [anioStr, mesStr] = periodo.split('-')
   const anio = parseInt(anioStr, 10)
@@ -95,14 +93,10 @@ export function obtenerTasasReforma(periodo: string): {
   if (anio < 2026 || (anio === 2026 && mes < 8)) rentabilidadProtegida = 0
   else rentabilidadProtegida = 0.009  // 0,9% desde 08/2026
 
-  // Ley SANNA
-  const leySanna = 0.003 // 0,3% fijo
-
   return {
     cap_individual_afp: capIndividual,
     expectativa_vida: expectativaVida,
     rentabilidad_protegida: rentabilidadProtegida,
-    ley_sanna: leySanna,
   }
 }
 
@@ -315,7 +309,6 @@ export function calcularLiquidacion(
 
   let sis: number, isl: number, indemnizacion: number, cesantiaEmpleador: number
   let afpEmpleador: number, expectativaVida: number, rentabilidadProtegida: number
-  let leySanna: number
 
   if (tieneRIMA) {
     // Prorratear cotizaciones empleador con RIMA
@@ -342,9 +335,6 @@ export function calcularLiquidacion(
     rentabilidadProtegida = esPensionado ? 0 : prorratearCotizacion(
       tasasReforma.rentabilidad_protegida, brutoMensual, input.rima!, diasTrabajados, diasLicencia, indicadores.tope_afp,
     )
-    leySanna = prorratearCotizacion(
-      tasasReforma.ley_sanna, brutoMensual, input.rima!, diasTrabajados, diasLicencia, indicadores.tope_afp,
-    )
   } else {
     const baseCotizEmpleador = Math.min(totalImponible, indicadores.tope_cesantia)
     const baseAfpEmpleador = Math.min(totalImponible, indicadores.tope_afp)
@@ -364,12 +354,11 @@ export function calcularLiquidacion(
     rentabilidadProtegida = esPensionado
       ? 0
       : Math.round(baseAfpEmpleador * tasasReforma.rentabilidad_protegida)
-    leySanna = Math.round(baseAfpEmpleador * tasasReforma.ley_sanna)
   }
 
   const totalCotizaciones =
     sis + isl + indemnizacion + cesantiaEmpleador +
-    afpEmpleador + expectativaVida + rentabilidadProtegida + leySanna
+    afpEmpleador + expectativaVida + rentabilidadProtegida
 
   // ── Costos empleador ──
   const costoTotal = totalImponible + totalCotizaciones
@@ -404,7 +393,6 @@ export function calcularLiquidacion(
       afp_empleador: afpEmpleador,
       expectativa_vida: expectativaVida,
       rentabilidad_protegida: rentabilidadProtegida,
-      ley_sanna: leySanna,
       total_cotizaciones: totalCotizaciones,
     },
     totales: {

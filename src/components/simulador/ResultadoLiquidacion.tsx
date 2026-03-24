@@ -89,7 +89,6 @@ export function ResultadoLiquidacion({
           {cotizaciones_empleador.afp_empleador > 0 && <Row label="AFP empleador (Reforma)" value={cotizaciones_empleador.afp_empleador} />}
           {cotizaciones_empleador.expectativa_vida > 0 && <Row label="Expectativa de vida" value={cotizaciones_empleador.expectativa_vida} />}
           {cotizaciones_empleador.rentabilidad_protegida > 0 && <Row label="Rentabilidad protegida" value={cotizaciones_empleador.rentabilidad_protegida} />}
-          {cotizaciones_empleador.ley_sanna != null && cotizaciones_empleador.ley_sanna > 0 && <Row label="Ley SANNA" value={cotizaciones_empleador.ley_sanna} />}
           <TotalRow label="Total Cotizaciones" value={cotizaciones_empleador.total_cotizaciones} />
         </div>
       </CollapsibleCard>

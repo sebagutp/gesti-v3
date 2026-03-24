@@ -87,10 +87,11 @@ export const StepField = forwardRef<
 
     case 'radio':
       return (
-        <div className="space-y-2">
+        <div className="space-y-2" role="radiogroup" aria-label={step.label}>
           {step.options?.map((opt) => (
             <label
               key={opt.value}
+              onClick={() => onChange(opt.value)}
               className={cn(
                 'flex items-center gap-3 px-4 py-3 border rounded-lg cursor-pointer transition-colors',
                 strValue === opt.value
@@ -98,11 +99,20 @@ export const StepField = forwardRef<
                   : 'border-gray-200 hover:border-gray-300'
               )}
             >
+              <input
+                type="radio"
+                name={step.id}
+                value={opt.value}
+                checked={strValue === opt.value}
+                onChange={() => onChange(opt.value)}
+                className="sr-only"
+              />
               <div
                 className={cn(
                   'w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors',
                   strValue === opt.value ? 'border-gesti-verde' : 'border-gray-300'
                 )}
+                aria-hidden="true"
               >
                 {strValue === opt.value && (
                   <div className="w-2 h-2 rounded-full bg-gesti-verde" />
